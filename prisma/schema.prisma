@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// UTILISATEURS BACKOFFICE
+// ============================================
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  installationRequests InstallationRequest[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+}
+
+// ============================================
+// CLIENTS
+// ============================================
+model Customer {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String?
+  phone     String
+  address   String?
+  city      String   @default("Ouagadougou")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("customers")
+}
+
+// ============================================
+// CATÉGORIES
+// ============================================
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  parentId    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryToCategory")
+  products Product[]
+
+  @@map("categories")
+}
+
+// ============================================
+// PRODUITS
+// ============================================
+model Product {
+  id                String   @id @default(uuid())
+  name              String
+  slug              String   @unique
+  description       String   @db.Text
+  shortDescription  String?
+  price             Decimal  @db.Decimal(12, 2)
+  compareAtPrice    Decimal? @db.Decimal(12, 2)
+  costPrice         Decimal? @db.Decimal(12, 2)
+  sku               String   @unique
+  stock             Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  categoryId        String
+  images            Json     @default("[]")
+  specifications    Json     @default("{}")
+  warranty          String?  @db.Text
+  weight            Decimal? @db.Decimal(8, 2)
+  isActive          Boolean  @default(true)
+  isFeatured        Boolean  @default(false)
+  viewCount         Int      @default(0)
+  salesCount        Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isFeatured])
+  @@map("products")
+}
+
+// ============================================
+// COMMANDES
+// ============================================
+model Order {
+  id              String        @id @default(uuid())
+  orderNumber     String        @unique
+  customerId      String
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   PaymentMethod @default(CASH_ON_DELIVERY)
+  paymentStatus   PaymentStatus @default(PENDING)
+  subtotal        Decimal       @db.Decimal(12, 2)
+  deliveryFee     Decimal       @db.Decimal(12, 2)
+  total           Decimal       @db.Decimal(12, 2)
+  deliveryAddress String
+  deliveryCity    String
+  customerPhone   String
+  customerEmail   String?
+  customerNotes   String?       @db.Text
+  internalNotes   String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deliveredAt     DateTime?
+
+  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items    OrderItem[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([orderNumber])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  ORANGE_MONEY
+  MOOV_MONEY
+  WAVE
+  TELECEL_MONEY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// ============================================
+// ARTICLES DE COMMANDE
+// ============================================
+model OrderItem {
+  id           String  @id @default(uuid())
+  orderId      String
+  productId    String
+  productName  String
+  productImage String?
+  quantity     Int
+  price        Decimal @db.Decimal(12, 2)
+  subtotal     Decimal @db.Decimal(12, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ============================================
+// DEMANDES D'INSTALLATION
+// ============================================
+model InstallationRequest {
+  id                    String              @id @default(uuid())
+  requestNumber         String              @unique
+  customerName          String
+  customerPhone         String
+  customerEmail         String?
+  customerAddress       String
+  installationType      InstallationType
+  description           String              @db.Text
+  preferredDate         DateTime?
+  preferredTime         String?
+  images                Json                @default("[]")
+  status                InstallationStatus  @default(NEW)
+  estimatedCost         Decimal?            @db.Decimal(12, 2)
+  assignedTechnicianId  String?
+  technicianNotes       String?             @db.Text
+  appointmentDate       DateTime?
+  completedAt           DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  assignedTechnician User? @relation(fields: [assignedTechnicianId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([requestNumber])
+  @@map("installation_requests")
+}
+
+enum InstallationType {
+  SOLAR
+  ELECTRICAL
+  PLUMBING
+  OTHER
+}
+
+enum InstallationStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  ACCEPTED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================
+// CONFIGURATION SITE
+// ============================================
+model SiteSettings {
+  id                      String   @id @default(uuid())
+  siteName                String   @default("ZIDA SOLAIRE")
+  siteDescription         String?  @db.Text
+  contactEmail            String
+  contactPhone            String
+  whatsappNumber          String
+  address                 String?
+  openingHours            Json     @default("{}")
+  deliveryFeeOuagadougou  Decimal  @db.Decimal(8, 2) @default(2000)
+  deliveryFeeOtherCities  Decimal  @db.Decimal(8, 2) @default(5000)
+  freeDeliveryThreshold   Decimal  @db.Decimal(12, 2) @default(50000)
+  banners                 Json     @default("[]")
+  socialMedia             Json     @default("{}")
+  maintenanceMode         Boolean  @default(false)
+  updatedAt               DateTime @updatedAt
+
+  @@map("site_settings")
+}

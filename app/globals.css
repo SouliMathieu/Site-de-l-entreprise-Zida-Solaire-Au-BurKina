@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Thème de base ZIDA SOLAIRE */
+
+:root {
+  color-scheme: light;
+}
+
+/* Mode sombre optionnel */
+:root.dark {
+  color-scheme: dark;
+}
+
+/* Reset léger */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Style global du body */
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: rgb(248 250 252); /* bg-slate-50 */
+  color: rgb(15 23 42); /* text-slate-900 */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Liens */
+a {
+  color: #ff6b35;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Utilitaire container */
+.container-zida {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 72rem; /* ~max-w-6xl */
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
