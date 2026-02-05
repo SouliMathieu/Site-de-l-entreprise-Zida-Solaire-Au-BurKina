@@ -1,145 +1,327 @@
 // app/services/page.tsx
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import {
+  Sun,
+  Zap,
+  Wrench,
+  HeartHandshake,
+  ShieldCheck,
+  MessageSquare,
+} from "lucide-react";
 
 export const metadata = {
-  title: "Services d’installation | ZIDA SOLAIRE",
+  title: "Nos Services | ZIDA SOLAIRE",
   description:
-    "Installations solaires, installations électriques et maintenance au Burkina Faso avec ZIDA SOLAIRE.",
+    "Découvrez nos services : installation solaire, maintenance, dépannage et conseil personnalisé.",
 };
 
 export default function ServicesPage() {
   return (
-    <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
-      {/* Hero */}
-      <section className="text-center space-y-6">
-        <p className="text-sm font-semibold text-orange-500 uppercase tracking-wide">
-          Nos services
-        </p>
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-          Solutions solaires et électriques clés en main
-        </h1>
-        <p className="max-w-2xl mx-auto text-slate-600">
-          ZIDA SOLAIRE accompagne les particuliers et les entreprises pour tous
-          leurs projets solaires et électriques, de l’étude jusqu’à la mise en
-          service.
-        </p>
+    <div className="flex min-h-screen flex-col">
+      <Header />
 
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link
-            href="/demande-installation"
-            className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 transition-colors"
-          >
-            Demander une installation
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 rounded-lg border border-orange-500 px-6 py-3 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition-colors"
-          >
-            Nous contacter
-          </Link>
-        </div>
-      </section>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-16">
+          <div className="container-zida">
+            <div className="max-w-3xl">
+              <h1 className="text-4xl font-bold mb-4">Nos Services</h1>
+              <p className="text-lg text-orange-50">
+                Des solutions solaires complètes pour tous vos besoins
+                énergétiques, de l'étude à la maintenance.
+              </p>
+            </div>
+          </div>
+        </section>
 
-      {/* Grille des services */}
-      <section className="grid gap-8 md:grid-cols-3">
-        {/* Installation solaire */}
-        <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">
-            Installation de systèmes solaires
-          </h2>
-          <p className="text-sm text-orange-500 font-medium mb-4">
-            Production d&apos;énergie propre et fiable
-          </p>
-          <p className="text-sm text-slate-600 mb-4">
-            Nous dimensionnons et installons des systèmes solaires adaptés au
-            climat du Burkina Faso et à vos besoins énergétiques. Notre équipe
-            vous conseille sur le choix des panneaux, batteries et onduleurs
-            pour garantir une production fiable et un excellent retour sur
-            investissement.
-          </p>
-          <ul className="mt-auto space-y-2 text-sm text-slate-700">
-            <li>• Kits solaires pour maisons et villas.</li>
-            <li>• Solutions solaires pour boutiques, bureaux et PME.</li>
-            <li>• Autonomie pour sites isolés (forages, fermes, dépôts).</li>
-          </ul>
-        </article>
+        {/* Services Grid */}
+        <section className="py-16 bg-white">
+          <div className="container-zida">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {/* Installation Solaire */}
+              <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mb-6">
+                  <Sun className="h-7 w-7 text-orange-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                  Installation Solaire
+                </h3>
+                <p className="text-slate-600 mb-4">
+                  Installation complète de systèmes solaires photovoltaïques
+                  pour maisons, entreprises et industries.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Étude technique et dimensionnement</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Installation par techniciens certifiés</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Mise en service et formation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Garantie fabricant et installation</span>
+                  </li>
+                </ul>
+              </div>
 
-        {/* Installation électrique */}
-        <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">
-            Installation électrique bâtiment
-          </h2>
-          <p className="text-sm text-orange-500 font-medium mb-4">
-            Réseaux sûrs pour maisons et entreprises
-          </p>
-          <p className="text-sm text-slate-600 mb-4">
-            ZIDA SOLAIRE réalise des installations électriques complètes et
-            conformes aux normes pour les constructions neuves et les
-            rénovations. Du tableau général aux points lumineux, nous sécurisons
-            votre installation et optimisons la répartition des circuits pour
-            limiter les pannes et les risques.
-          </p>
-          <ul className="mt-auto space-y-2 text-sm text-slate-700">
-            <li>• Étude et conception de schémas électriques.</li>
-            <li>• Installation, rénovation et mise aux normes.</li>
-            <li>
-              • Protection, mise à la terre et sécurité des personnes.
-            </li>
-          </ul>
-        </article>
+              {/* Installation Électrique */}
+              <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mb-6">
+                  <Zap className="h-7 w-7 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                  Installation Électrique
+                </h3>
+                <p className="text-slate-600 mb-4">
+                  Travaux électriques complets pour bâtiments résidentiels et
+                  commerciaux aux normes.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Tableaux électriques et distribution</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Câblage et mise aux normes</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Éclairage intérieur et extérieur</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Domotique et automatismes</span>
+                  </li>
+                </ul>
+              </div>
 
-        {/* Maintenance & dépannage */}
-        <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">
-            Maintenance & dépannage
-          </h2>
-          <p className="text-sm text-orange-500 font-medium mb-4">
-            Suivi de vos installations dans la durée
-          </p>
-          <p className="text-sm text-slate-600 mb-4">
-            Nous assurons la maintenance préventive et corrective de vos
-            installations solaires et électriques pour prolonger leur durée de
-            vie. En cas de panne, nos techniciens interviennent rapidement pour
-            diagnostiquer le problème et remettre votre système en service.
-          </p>
-          <ul className="mt-auto space-y-2 text-sm text-slate-700">
-            <li>• Contrôle et nettoyage des panneaux solaires.</li>
-            <li>• Vérification des batteries, câblages et protections.</li>
-            <li>
-              • Dépannage sur site en cas de coupure ou dysfonctionnement.
-            </li>
-          </ul>
-        </article>
-      </section>
+              {/* Maintenance */}
+              <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
+                  <Wrench className="h-7 w-7 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                  Maintenance & SAV
+                </h3>
+                <p className="text-slate-600 mb-4">
+                  Contrats de maintenance préventive et service après-vente
+                  réactif pour garantir la performance.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Visite de contrôle annuelle</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Nettoyage des panneaux solaires</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Dépannage rapide sous 24h</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Pièces de rechange disponibles</span>
+                  </li>
+                </ul>
+              </div>
 
-      {/* Bandeau final */}
-      <section className="rounded-2xl bg-slate-900 px-6 py-10 text-center text-white md:px-10">
-        <h2 className="text-2xl md:text-3xl font-semibold mb-3">
-          Un projet d’installation solaire ou électrique ?
-        </h2>
-        <p className="max-w-2xl mx-auto text-slate-200 mb-6">
-          Décrivez votre besoin en quelques clics. Nous vous rappelons pour
-          vous proposer une étude personnalisée et un devis adapté à votre
-          budget.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link
-            href="/demande-installation"
-            className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 transition-colors"
-          >
-            Demander une installation
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-500 px-6 py-3 text-sm font-semibold text-slate-100 hover:bg-slate-800 transition-colors"
-          >
-            Retour à l’accueil
-          </Link>
-        </div>
-      </section>
-    </main>
+              {/* Conseil */}
+              <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-6">
+                  <MessageSquare className="h-7 w-7 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                  Conseil & Audit
+                </h3>
+                <p className="text-slate-600 mb-4">
+                  Expertise et accompagnement personnalisé pour optimiser votre
+                  projet énergétique.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Audit énergétique complet</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Étude de faisabilité</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Calcul de rentabilité</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Accompagnement administratif</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Financement */}
+              <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mb-6">
+                  <HeartHandshake className="h-7 w-7 text-amber-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                  Solutions de Financement
+                </h3>
+                <p className="text-slate-600 mb-4">
+                  Options de paiement flexibles pour rendre l'énergie solaire
+                  accessible à tous.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Paiement échelonné sans intérêts</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Partenariats avec institutions financières</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Facilités de paiement personnalisées</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Devis transparent et sans surprise</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Garanties */}
+              <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center mb-6">
+                  <ShieldCheck className="h-7 w-7 text-rose-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                  Garanties & Assurances
+                </h3>
+                <p className="text-slate-600 mb-4">
+                  Votre tranquillité d'esprit avec des garanties étendues sur
+                  matériel et main d'œuvre.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Garantie panneaux : 25 ans</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Garantie onduleurs : 5-10 ans</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Garantie installation : 2 ans</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">✓</span>
+                    <span>Assurance décennale</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Process */}
+        <section className="py-16 bg-slate-50">
+          <div className="container-zida">
+            <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center">
+              Notre processus en 4 étapes
+            </h2>
+            <div className="grid gap-8 md:grid-cols-4">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  1
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Contact & Étude
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Prise de contact, visite technique et étude personnalisée de
+                  vos besoins
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  2
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Devis & Validation
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Proposition technique et financière détaillée, signature du
+                  contrat
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  3
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Installation
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Réalisation de l'installation par nos techniciens certifiés
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-orange-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  4
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Suivi & Maintenance
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Accompagnement continu et maintenance pour performance optimale
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-16 bg-white">
+          <div className="container-zida text-center">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              Besoin d'un service ?
+            </h2>
+            <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
+              Contactez-nous pour discuter de votre projet ou obtenir un devis
+              personnalisé.
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <a
+                href="/devis"
+                className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-600"
+              >
+                Demander un devis
+              </a>
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Nous contacter
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+      <WhatsAppButton />
+    </div>
   );
 }

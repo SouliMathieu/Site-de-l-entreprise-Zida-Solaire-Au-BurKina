@@ -1,4 +1,4 @@
-// components/product/ProductFilterClient.tsx
+// components/products/ProductFilterClient.tsx
 "use client";
 
 interface ProductFilterClientProps {
@@ -17,24 +17,26 @@ export function ProductFilterClient({
   }
 
   return (
-    <form className="flex items-center gap-2 text-sm">
-      <label htmlFor="categorie" className="text-slate-700">
-        Catégorie
+    <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
+      <label
+        htmlFor="category-filter"
+        className="mb-3 block text-sm font-semibold text-slate-700"
+      >
+        Filtrer par catégorie
       </label>
       <select
-        id="categorie"
-        name="categorie"
-        value={currentCategorie ?? ""}
+        id="category-filter"
+        value={currentCategorie || ""}
         onChange={handleChange}
-        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
+        className="w-full rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-base font-medium text-slate-900 shadow-sm transition-all hover:border-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
       >
-        <option value="">Toutes</option>
+        <option value="">Toutes les catégories</option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.slug}>
             {cat.name}
           </option>
         ))}
       </select>
-    </form>
+    </div>
   );
 }

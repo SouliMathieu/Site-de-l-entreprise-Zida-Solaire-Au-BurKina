@@ -1,6 +1,11 @@
 // app/api/orders/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { resend } from "@/lib/resend";
+import { OrderConfirmationEmail } from "@/emails/OrderConfirmation";
+import { NewOrderAdminEmail } from "@/emails/NewOrderAdmin";
+import { createElement } from "react";
 
 type CheckoutItem = {
   productId: string;
@@ -25,7 +30,7 @@ type CheckoutPayload = {
   };
 };
 
-// Génération simple d'un numéro de commande lisible
+// Génération d'un numéro de commande lisible
 function generateOrderNumber() {
   const now = new Date();
   const y = now.getFullYear().toString().slice(-2);
@@ -46,7 +51,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // création (ou récupération) d'un customer minimal
+    // Création du customer
     const customer = await prisma.customer.create({
       data: {
         firstName: body.firstName,
@@ -60,6 +65,7 @@ export async function POST(req: Request) {
 
     const orderNumber = generateOrderNumber();
 
+    // Création de la commande
     const order = await prisma.order.create({
       data: {
         orderNumber,
@@ -74,7 +80,7 @@ export async function POST(req: Request) {
         deliveryCity: body.city || "Ouagadougou",
         customerPhone: body.phone,
         customerEmail: body.email,
-        customerNotes: body.notes ?? "",
+        customerNotes: body.notes || "",
         items: {
           create: body.items.map((item) => ({
             productId: item.productId,
@@ -89,6 +95,59 @@ export async function POST(req: Request) {
         items: true,
       },
     });
+
+    // 🎯 ENVOI D'EMAIL DE CONFIRMATION AU CLIENT
+    try {
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+        to: body.email,
+        subject: `Confirmation de commande #${orderNumber} - ZIDA SOLAIRE`,
+        react: createElement(OrderConfirmationEmail, {
+          orderNumber,
+          customerName: `${body.firstName} ${body.lastName}`,
+          items: body.items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          total: body.totals.total,
+          deliveryAddress: `${body.address}, ${body.city}`,
+        }),
+      });
+
+      console.log("✅ Email de confirmation envoyé au client:", body.email);
+    } catch (emailError) {
+      console.error("❌ Erreur envoi email client:", emailError);
+      // On ne bloque pas la commande si l'email échoue
+    }
+
+    // 🎯 ENVOI D'EMAIL À L'ADMIN
+    try {
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+        to: process.env.ADMIN_EMAIL || "mathieusouli35@gmail.com",
+        subject: `🆕 Nouvelle commande #${orderNumber} - ZIDA SOLAIRE`,
+        react: createElement(NewOrderAdminEmail, {
+          orderNumber,
+          customerName: `${body.firstName} ${body.lastName}`,
+          customerEmail: body.email,
+          customerPhone: body.phone,
+          items: body.items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          total: body.totals.total,
+          deliveryAddress: `${body.address}, ${body.city}`,
+          adminUrl: `${process.env.ADMIN_PANEL_URL || "http://localhost:3000/admin"}/commandes`,
+        }),
+      });
+
+      console.log("✅ Email admin envoyé à:", process.env.ADMIN_EMAIL || "mathieusouli35@gmail.com");
+    } catch (emailError) {
+      console.error("❌ Erreur envoi email admin:", emailError);
+      // On ne bloque pas la commande si l'email échoue
+    }
 
     return NextResponse.json(
       {

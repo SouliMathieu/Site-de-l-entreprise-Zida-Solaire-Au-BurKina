@@ -1,165 +1,176 @@
+// components/cart/CartClient.tsx
 "use client";
 
-import { useEffect } from "react";
-import { useCart } from "@/lib/useCart";
+import { useCart } from "@/hooks/useCart";
+import Image from "next/image";
 import Link from "next/link";
+import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 
 export function CartClient() {
-  const { items, hydrate, updateQuantity, removeItem, clear } = useCart();
+  const { items, updateQuantity, removeItem, getTotalPrice, clearCart } =
+    useCart();
 
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+  const totalPrice = getTotalPrice();
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  // Handlers extraits (pas inline)
+  const handleIncrement = (id: string, currentQty: number) => {
+    updateQuantity(id, currentQty + 1);
+  };
 
-  // règles de livraison simples pour MVP (conformes au cahier des charges)
-  const deliveryFee =
-    subtotal === 0
-      ? 0
-      : subtotal >= 50000
-      ? 0
-      : 2000; // 0 FCFA si >= 50 000, sinon 2000 à Ouaga [file:50]
+  const handleDecrement = (id: string, currentQty: number) => {
+    if (currentQty > 1) {
+      updateQuantity(id, currentQty - 1);
+    }
+  };
 
-  const total = subtotal + deliveryFee;
+  const handleRemove = (id: string) => {
+    removeItem(id);
+  };
+
+  const handleClearCart = () => {
+    if (confirm("Voulez-vous vraiment vider le panier ?")) {
+      clearCart();
+    }
+  };
 
   if (items.length === 0) {
     return (
-      <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
-        Votre panier est vide.
-        <Link href="/produits" className="ml-1 text-[#FF6B35] underline">
-          Voir les produits
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <ShoppingBag className="mx-auto h-16 w-16 text-slate-300" />
+        <h2 className="mt-4 text-2xl font-semibold text-slate-900">
+          Votre panier est vide
+        </h2>
+        <p className="mt-2 text-slate-600">
+          Découvrez nos produits et ajoutez-en à votre panier
+        </p>
+        <Link
+          href="/produits"
+          className="mt-6 inline-block rounded-lg bg-orange-500 px-6 py-3 text-white hover:bg-orange-600"
+        >
+          Voir nos produits
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-[2fr_1fr]">
-      {/* Liste des articles */}
-      <div className="space-y-4">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex gap-4 rounded-lg border border-slate-200 bg-white p-3"
-          >
-            <div className="h-20 w-24 overflow-hidden rounded-md bg-slate-100">
-              {item.image ? (
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
-                  Image
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-1 flex-col justify-between gap-2">
-              <div>
-                <Link
-                  href={`/produits/${item.slug}`}
-                  className="text-sm font-semibold text-slate-900 hover:underline"
-                >
-                  {item.name}
-                </Link>
-                <p className="text-xs text-slate-500">
-                  Prix unitaire: {item.price.toLocaleString("fr-FR")} FCFA
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center rounded-md border border-slate-300 bg-white">
-                  <button
-                    type="button"
-                    className="px-3 py-1 text-sm text-slate-700 disabled:opacity-40"
-                    onClick={() =>
-                      updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                    }
-                    disabled={item.quantity <= 1}
-                  >
-                    -
-                  </button>
-                  <span className="min-w-[2rem] text-center text-sm font-medium">
-                    {item.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    className="px-3 py-1 text-sm text-slate-700"
-                    onClick={() =>
-                      updateQuantity(item.id, item.quantity + 1)
-                    }
-                  >
-                    +
-                  </button>
-                </div>
-
-                <span className="text-sm font-semibold text-slate-900">
-                  {(item.price * item.quantity).toLocaleString("fr-FR")} FCFA
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => removeItem(item.id)}
-                  className="text-xs text-red-500 hover:underline"
-                >
-                  Supprimer
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Récapitulatif */}
-      <aside className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
-        <h2 className="text-sm font-semibold text-slate-900">
-          Récapitulatif
-        </h2>
-
-        <div className="mt-3 space-y-1">
-          <div className="flex justify-between">
-            <span>Sous-total</span>
-            <span>{subtotal.toLocaleString("fr-FR")} FCFA</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Livraison (Ouagadougou)</span>
-            <span>
-              {deliveryFee === 0
-                ? "Gratuite"
-                : `${deliveryFee.toLocaleString("fr-FR")} FCFA`}
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-sm font-semibold">
-          <span>Total</span>
-          <span>{total.toLocaleString("fr-FR")} FCFA</span>
-        </div>
-
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-slate-900">Mon Panier</h1>
         <button
-          type="button"
-          className="mt-4 w-full rounded-md bg-[#FF6B35] px-4 py-2 text-sm font-semibold text-white shadow hover:bg-[#e85f2f]"
-          onClick={() => {
-            window.location.href = "/checkout";
-          }}
-        >
-          Passer la commande
-        </button>
-
-        <button
-          type="button"
-          className="mt-2 w-full rounded-md border border-slate-300 px-4 py-2 text-xs text-slate-600 hover:bg-slate-100"
-          onClick={clear}
+          onClick={handleClearCart}
+          className="text-sm text-red-600 hover:text-red-700"
         >
           Vider le panier
         </button>
-      </aside>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Liste des articles */}
+        <div className="lg:col-span-2 space-y-4">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex gap-4 rounded-lg bg-white p-4 shadow"
+            >
+              <Image
+                src={item.image || "/placeholder.jpg"}
+                alt={item.name}
+                width={120}
+                height={120}
+                className="rounded object-cover"
+              />
+              <div className="flex flex-1 flex-col">
+                <div className="flex justify-between">
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      {item.name}
+                    </h3>
+                    <p className="mt-1 text-lg font-bold text-orange-500">
+                      {item.price.toLocaleString()} FCFA
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleRemove(item.id)}
+                    className="text-slate-400 hover:text-red-500"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    onClick={() => handleDecrement(item.id, item.quantity)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 hover:bg-slate-50"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-12 text-center font-semibold">
+                    {item.quantity}
+                  </span>
+                  <button
+                    onClick={() => handleIncrement(item.id, item.quantity)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 hover:bg-slate-50"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="mt-2 text-right">
+                  <span className="font-semibold text-slate-900">Total</span>
+                  <p className="text-lg font-bold text-slate-900">
+                    {(item.price * item.quantity).toLocaleString()} FCFA
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Résumé */}
+        <div className="lg:col-span-1">
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="text-xl font-semibold text-slate-900">Résumé</h2>
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Sous-total</span>
+                <span className="font-semibold">
+                  {totalPrice.toLocaleString()} FCFA
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Livraison</span>
+                <span className="text-sm text-slate-500">
+                  Calculée à l'étape suivante
+                </span>
+              </div>
+              <div className="border-t pt-2">
+                <div className="flex justify-between">
+                  <span className="text-lg font-bold">Total</span>
+                  <span className="text-lg font-bold text-orange-500">
+                    {totalPrice.toLocaleString()} FCFA
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="mt-4 text-xs text-slate-500">
+              Livraison et taxes calculées à l'étape suivante
+            </p>
+            <Link
+              href="/commande"
+              className="mt-6 block w-full rounded-lg bg-orange-500 py-3 text-center font-semibold text-white hover:bg-orange-600"
+            >
+              Passer la commande
+            </Link>
+            <Link
+              href="/produits"
+              className="mt-3 block w-full rounded-lg border border-slate-300 py-3 text-center font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Continuer mes achats
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

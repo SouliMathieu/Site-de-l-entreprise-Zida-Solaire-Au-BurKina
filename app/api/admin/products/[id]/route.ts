@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-
 interface Params {
   params: Promise<{ id: string }>;
 }
@@ -16,27 +15,39 @@ export async function PUT(request: Request, { params }: Params) {
       name,
       slug,
       categoryId,
-      price,
-      stock,
-      imageUrl,
+      description,
       shortDescription,
+      price,
+      compareAtPrice,
+      sku,
+      stock,
+      lowStockThreshold,
+      warranty,
+      weight,
+      images,
       isActive,
       isFeatured,
     } = body as {
       name: string;
       slug: string;
       categoryId: string;
+      description: string;
+      shortDescription?: string;
       price: number;
+      compareAtPrice?: number | null;
+      sku: string;
       stock: number;
-      imageUrl: string | null;
-      shortDescription: string;
+      lowStockThreshold?: number;
+      warranty?: string | null;
+      weight?: number | null;
+      images?: string[];
       isActive: boolean;
       isFeatured: boolean;
     };
 
-    if (!name || !categoryId) {
+    if (!name || !categoryId || !description || !sku) {
       return NextResponse.json(
-        { error: "Nom et catégorie sont obligatoires." },
+        { error: "Nom, catégorie, description et SKU sont obligatoires." },
         { status: 400 }
       );
     }
@@ -56,11 +67,16 @@ export async function PUT(request: Request, { params }: Params) {
         name,
         slug: cleanSlug,
         categoryId,
-        price,
-        stock,
-        images: imageUrl ? [imageUrl] : [],
+        description,
         shortDescription: shortDescription || "",
-        description: shortDescription || "Description à compléter.",
+        price,
+        compareAtPrice: compareAtPrice || null,
+        sku,
+        stock: stock || 0,
+        lowStockThreshold: lowStockThreshold || 5,
+        warranty: warranty || null,
+        weight: weight || null,
+        images: images || [],
         isActive,
         isFeatured,
       },
@@ -69,10 +85,7 @@ export async function PUT(request: Request, { params }: Params) {
     return NextResponse.json({ status: "ok" }, { status: 200 });
   } catch (error) {
     console.error("Erreur mise à jour produit", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
@@ -87,9 +100,6 @@ export async function DELETE(request: Request, { params }: Params) {
     return NextResponse.json({ status: "deleted" }, { status: 200 });
   } catch (error) {
     console.error("Erreur suppression produit", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

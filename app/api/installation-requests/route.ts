@@ -1,6 +1,6 @@
+// app/api/installation-requests/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
 
 function generateRequestNumber() {
   const now = new Date();
@@ -15,7 +15,6 @@ function generateRequestNumber() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
     const {
       firstName,
       lastName,
@@ -31,7 +30,7 @@ export async function POST(request: Request) {
       lastName: string;
       phone: string;
       email?: string;
-      type: "SOLAR" | "ELECTRICAL" | "OTHER";
+      type: "SOLAR" | "ELECTRICAL" | "PLUMBING" | "OTHER";
       address?: string;
       description: string;
       preferredDate?: string;
@@ -46,7 +45,6 @@ export async function POST(request: Request) {
     }
 
     const requestNumber = generateRequestNumber();
-
     const req = await prisma.installationRequest.create({
       data: {
         requestNumber,
@@ -63,7 +61,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { requestNumber: req.requestNumber },
+      { requestNumber: req.requestNumber, requestId: req.id },
       { status: 201 }
     );
   } catch (error) {

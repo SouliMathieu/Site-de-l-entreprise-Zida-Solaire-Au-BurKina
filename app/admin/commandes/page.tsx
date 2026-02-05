@@ -1,14 +1,38 @@
 // app/admin/commandes/page.tsx
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { OrdersFilter } from "@/components/admin/OrdersFilter";
 
 export const metadata = {
   title: "Commandes | Admin ZIDA SOLAIRE",
   description: "Liste des commandes clients ZIDA SOLAIRE pour le backoffice.",
 };
 
-export default async function AdminOrdersPage() {
+interface PageProps {
+  searchParams: Promise<{ status?: string; period?: string }>;
+}
+
+export default async function AdminOrdersPage({ searchParams }: PageProps) {
+  const { status, period } = await searchParams;
+
+  // Calcul de la date de début selon la période
+  let startDate: Date | undefined;
+  const now = new Date();
+
+  if (period === "today") {
+    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  } else if (period === "7days") {
+    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  } else if (period === "30days") {
+    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  }
+
+  // Requête Prisma avec filtres
   const orders = await prisma.order.findMany({
+    where: {
+      ...(status && { status }),
+      ...(startDate && { createdAt: { gte: startDate } }),
+    },
     orderBy: { createdAt: "desc" },
     include: {
       customer: {
@@ -25,18 +49,21 @@ export default async function AdminOrdersPage() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Commandes</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Suivi des commandes clients (100 dernières).
+            Suivi des commandes clients ({orders.length} résultat
+            {orders.length > 1 ? "s" : ""}).
           </p>
         </div>
+
+        <OrdersFilter />
       </div>
 
       {orders.length === 0 ? (
         <p className="text-sm text-slate-500">
-          Aucune commande pour le moment.
+          Aucune commande trouvée pour ces critères.
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -70,6 +97,21 @@ export default async function AdminOrdersPage() {
                   }
                 );
 
+                // Badge couleur selon statut
+                let statusColor = "bg-slate-100 text-slate-700";
+                if (order.status === "PENDING")
+                  statusColor = "bg-amber-100 text-amber-700";
+                if (order.status === "CONFIRMED")
+                  statusColor = "bg-blue-100 text-blue-700";
+                if (order.status === "PREPARING")
+                  statusColor = "bg-purple-100 text-purple-700";
+                if (order.status === "SHIPPED")
+                  statusColor = "bg-indigo-100 text-indigo-700";
+                if (order.status === "DELIVERED")
+                  statusColor = "bg-emerald-100 text-emerald-700";
+                if (order.status === "CANCELLED")
+                  statusColor = "bg-red-100 text-red-700";
+
                 return (
                   <tr
                     key={order.id}
@@ -91,7 +133,9 @@ export default async function AdminOrdersPage() {
                       {Number(order.total).toLocaleString("fr-FR")} FCFA
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusColor}`}
+                      >
                         {order.status}
                       </span>
                     </td>

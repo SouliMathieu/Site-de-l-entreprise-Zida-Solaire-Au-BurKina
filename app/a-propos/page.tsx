@@ -1,156 +1,191 @@
 // app/a-propos/page.tsx
-import Link from "next/link";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { Award, Users, Target, Zap } from "lucide-react";
 
 export const metadata = {
-  title: "À propos de ZIDA SOLAIRE",
+  title: "À propos | ZIDA SOLAIRE",
   description:
-    "Découvrez l’histoire, la mission et les valeurs de ZIDA SOLAIRE, spécialiste des solutions solaires et électriques au Burkina Faso.",
+    "Découvrez ZIDA SOLAIRE, votre partenaire de confiance pour l'énergie solaire au Burkina Faso.",
 };
 
 export default function AboutPage() {
   return (
-    <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
-      {/* Hero */}
-      <section className="space-y-6">
-        <p className="text-sm font-semibold text-orange-500 uppercase tracking-wide">
-          À propos
-        </p>
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-          ZIDA SOLAIRE, votre partenaire énergie au Burkina Faso
-        </h1>
-        <p className="max-w-3xl text-slate-600">
-          ZIDA SOLAIRE est une entreprise burkinabè spécialisée dans la vente
-          d’équipements solaires et électroniques, l’installation de systèmes
-          solaires et les installations électriques pour particuliers et
-          entreprises, basée à Ouagadougou.[file:50]
-        </p>
-      </section>
+    <div className="flex min-h-screen flex-col">
+      <Header />
 
-      {/* Mission & vision */}
-      <section className="grid gap-8 md:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-3">
-            Notre mission
-          </h2>
-          <p className="text-slate-600 text-sm">
-            Rendre l’énergie solaire et les installations électriques fiables
-            accessibles au plus grand nombre, en proposant des solutions
-            adaptées au contexte local, performantes et durables.[file:50]
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900 mb-3">
-            Notre vision
-          </h2>
-          <p className="text-slate-600 text-sm">
-            Devenir une référence en Afrique de l’Ouest pour les solutions
-            solaires et électriques, en combinant expertise technique, qualité
-            de service et accompagnement de proximité.[file:50]
-          </p>
-        </div>
-      </section>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-16">
+          <div className="container-zida">
+            <div className="max-w-3xl">
+              <h1 className="text-4xl font-bold mb-4">À propos de ZIDA SOLAIRE</h1>
+              <p className="text-lg text-orange-50">
+                Votre partenaire de confiance pour l'énergie solaire au Burkina
+                Faso. Nous accompagnons particuliers et entreprises vers
+                l'autonomie énergétique.
+              </p>
+            </div>
+          </div>
+        </section>
 
-      {/* Valeurs */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold text-slate-900">
-          Nos valeurs
-        </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Proximité
-            </h3>
-            <p className="text-sm text-slate-600">
-              Une équipe disponible sur place, à l’écoute des besoins des
-              particuliers, PME et structures locales pour proposer des
-              solutions adaptées.
-            </p>
+        {/* Notre Histoire */}
+        <section className="py-16 bg-white">
+          <div className="container-zida">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-slate-900 mb-6">
+                Notre histoire
+              </h2>
+              <div className="prose prose-slate max-w-none">
+                <p className="text-slate-700 leading-relaxed mb-4">
+                  Fondée en 2020, ZIDA SOLAIRE est née de la conviction que
+                  l'énergie solaire représente l'avenir du Burkina Faso. Face aux
+                  défis énergétiques du pays, nous avons décidé d'apporter notre
+                  contribution en rendant l'énergie solaire accessible à tous.
+                </p>
+                <p className="text-slate-700 leading-relaxed mb-4">
+                  Aujourd'hui, nous sommes fiers d'avoir installé plus de 500
+                  systèmes solaires dans tout le pays, permettant à des milliers
+                  de Burkinabè de bénéficier d'une énergie propre, fiable et
+                  économique.
+                </p>
+                <p className="text-slate-700 leading-relaxed">
+                  Notre équipe d'experts certifiés travaille avec passion pour
+                  vous offrir des solutions énergétiques de qualité, adaptées à
+                  vos besoins spécifiques.
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Qualité & fiabilité
-            </h3>
-            <p className="text-sm text-slate-600">
-              Sélection rigoureuse des équipements, installations soignées et
-              respect des bonnes pratiques pour assurer la performance dans la
-              durée.[file:50]
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Transparence
-            </h3>
-            <p className="text-sm text-slate-600">
-              Devis clairs, explications simples et accompagnement avant, pendant
-              et après l’installation pour bâtir une relation de confiance.[file:50]
-            </p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Chiffres clés / engagement */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold text-slate-900">
-          Notre engagement au quotidien
-        </h2>
-        <p className="max-w-3xl text-sm text-slate-600">
-          À travers chaque projet, ZIDA SOLAIRE vise à améliorer le confort
-          des foyers et la performance des entreprises, tout en réduisant la
-          facture énergétique et la dépendance au réseau.[file:50]
-        </p>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl bg-slate-900 text-white p-5">
-            <p className="text-3xl font-bold mb-1">25+</p>
-            <p className="text-xs uppercase tracking-wide text-slate-300">
-              années de performance garanties sur les panneaux (garanties
-              constructeurs typiques).[file:50]
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <p className="text-3xl font-bold text-slate-900 mb-1">10 ans</p>
-            <p className="text-xs uppercase tracking-wide text-slate-500">
-              de garantie produit typique sur les équipements clés.[file:50]
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <p className="text-3xl font-bold text-slate-900 mb-1">
-              + de projets
-            </p>
-            <p className="text-xs uppercase tracking-wide text-slate-500">
-              Des installations résidentielles et professionnelles en
-              croissance continue au Burkina Faso.
-            </p>
-          </div>
-        </div>
-      </section>
+        {/* Nos Valeurs */}
+        <section className="py-16 bg-slate-50">
+          <div className="container-zida">
+            <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center">
+              Nos valeurs
+            </h2>
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-4">
+                  <Award className="h-6 w-6 text-orange-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Qualité
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Nous ne travaillons qu'avec des équipements de marques
+                  reconnues pour leur fiabilité et leur durabilité.
+                </p>
+              </div>
 
-      {/* Appel à l’action */}
-      <section className="rounded-2xl bg-slate-50 px-6 py-10 md:px-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2">
-            Discutons de votre projet
-          </h2>
-          <p className="text-sm text-slate-600 max-w-xl">
-            Que vous souhaitiez équiper votre maison, moderniser l’installation
-            électrique de vos locaux ou sécuriser votre alimentation en
-            énergie, notre équipe est disponible pour vous conseiller.[file:50]
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/demande-installation"
-            className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 transition-colors"
-          >
-            Demander une installation
-          </Link>
-          <Link
-            href="/contact"
-            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
-          >
-            Nous contacter
-          </Link>
-        </div>
-      </section>
-    </main>
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Proximité
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Une équipe locale à votre écoute, disponible avant, pendant et
+                  après votre installation.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                  <Target className="h-6 w-6 text-emerald-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Excellence
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Des installations réalisées dans les règles de l'art par des
+                  techniciens certifiés et expérimentés.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-amber-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Innovation
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Nous restons à la pointe de la technologie solaire pour vous
+                  offrir les meilleures solutions du marché.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Statistiques */}
+        <section className="py-16 bg-slate-900 text-white">
+          <div className="container-zida">
+            <div className="grid gap-8 md:grid-cols-4 text-center">
+              <div>
+                <div className="text-4xl font-bold text-orange-400 mb-2">
+                  500+
+                </div>
+                <div className="text-sm text-slate-300">
+                  Installations réalisées
+                </div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-orange-400 mb-2">
+                  5 ans
+                </div>
+                <div className="text-sm text-slate-300">D'expérience</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-orange-400 mb-2">
+                  98%
+                </div>
+                <div className="text-sm text-slate-300">Clients satisfaits</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-orange-400 mb-2">
+                  24/7
+                </div>
+                <div className="text-sm text-slate-300">Support technique</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-16 bg-white">
+          <div className="container-zida text-center">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              Prêt à passer à l'énergie solaire ?
+            </h2>
+            <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
+              Contactez-nous dès aujourd'hui pour une étude personnalisée et
+              gratuite de votre projet.
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <a
+                href="/devis"
+                className="inline-flex items-center justify-center rounded-lg bg-orange-500 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-600"
+              >
+                Demander un devis gratuit
+              </a>
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Nous contacter
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+      <WhatsAppButton />
+    </div>
   );
 }

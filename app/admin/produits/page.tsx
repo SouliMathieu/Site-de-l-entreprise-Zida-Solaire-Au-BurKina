@@ -1,134 +1,143 @@
 // app/admin/produits/page.tsx
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
+export const metadata = {
+  title: "Produits | Admin ZIDA SOLAIRE",
+  description: "Gestion des produits ZIDA SOLAIRE.",
+};
 
-export default async function AdminProductsPage() {
+export default async function AdminProduitsPage() {
   const products = await prisma.product.findMany({
+    orderBy: { createdAt: "desc" },
     include: {
       category: {
-        select: { id: true, name: true },
+        select: { name: true },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
     },
     take: 100,
   });
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-
-      <main className="container-zida flex-1 py-8">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Produits (Admin)
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Gestion basique des produits pour le MVP (ajout, modification, activation).
-            </p>
-          </div>
-
-          <Link
-            href="/admin/produits/nouveau"
-            className="rounded-md bg-[#FF6B35] px-4 py-2 text-sm font-semibold text-white shadow hover:bg-[#e85f2f]"
-          >
-            Ajouter un produit
-          </Link>
+    <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Produits</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Gestion des produits ({products.length} total).
+          </p>
         </div>
+        <Link
+          href="/admin/produits/nouveau"
+          className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600"
+        >
+          <Plus className="h-4 w-4" />
+          Nouveau produit
+        </Link>
+      </div>
 
-        <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="min-w-full text-left text-xs text-slate-700">
-            <thead className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-3 py-2">Produit</th>
-                <th className="px-3 py-2">Catégorie</th>
-                <th className="px-3 py-2">Prix</th>
-                <th className="px-3 py-2">Stock</th>
-                <th className="px-3 py-2">Actif</th>
-                <th className="px-3 py-2">Actions</th>
+      {products.length === 0 ? (
+        <p className="text-sm text-slate-500">Aucun produit pour le moment.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50">
+              <tr className="text-left text-xs font-semibold text-slate-600">
+                <th className="px-4 py-3">Image</th>
+                <th className="px-4 py-3">Nom</th>
+                <th className="px-4 py-3">Catégorie</th>
+                <th className="px-4 py-3">Prix</th>
+                <th className="px-4 py-3">Stock</th>
+                <th className="px-4 py-3">Statut</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
-                <tr
-                  key={product.id}
-                  className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
-                >
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-10 w-10 overflow-hidden rounded bg-slate-100">
-                        {Array.isArray(product.images) &&
-                        (product.images as string[])[0] ? (
+              {products.map((product) => {
+                const images = product.images as string[];
+                const mainImage = images?.[0];
+
+                return (
+                  <tr
+                    key={product.id}
+                    className="border-t border-slate-100 hover:bg-slate-50"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="h-12 w-12 rounded-lg bg-slate-100 overflow-hidden">
+                        {mainImage ? (
                           <img
-                            src={(product.images as string[])[0]}
+                            src={mainImage}
                             alt={product.name}
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
+                          <div className="flex h-full w-full items-center justify-center text-[9px] text-slate-400">
                             Img
                           </div>
                         )}
                       </div>
-                      <div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          {product.name}
-                        </div>
-                        <div className="text-[11px] text-slate-500">
-                          {product.slug}
-                        </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-slate-900">
+                        {product.name}
+                      </p>
+                      <p className="text-xs text-slate-500">{product.sku}</p>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {product.category?.name || "-"}
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-slate-900">
+                      {Number(product.price).toLocaleString("fr-FR")} FCFA
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          product.stock === 0
+                            ? "bg-red-100 text-red-700"
+                            : product.stock <= (product.lowStockThreshold || 5)
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          product.isActive
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {product.isActive ? "Actif" : "Inactif"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/produits/${product.id}`}
+                          className="text-xs font-semibold text-orange-600 hover:underline"
+                        >
+                          Modifier
+                        </Link>
+                        <Link
+                          href={`/produits/${product.slug}`}
+                          target="_blank"
+                          className="text-xs font-semibold text-blue-600 hover:underline"
+                        >
+                          Voir
+                        </Link>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-xs">
-                    {product.category?.name ?? "-"}
-                  </td>
-                  <td className="px-3 py-2 text-xs">
-                    {Number(product.price).toLocaleString("fr-FR")} FCFA
-                  </td>
-                  <td className="px-3 py-2 text-xs">
-                    {product.stock}{" "}
-                    {product.stock <= product.lowStockThreshold && product.stock > 0
-                      ? "(stock bas)"
-                      : product.stock <= 0
-                      ? "(rupture)"
-                      : ""}
-                  </td>
-                  <td className="px-3 py-2 text-xs">
-                    {product.isActive ? "Oui" : "Non"}
-                  </td>
-                  <td className="px-3 py-2 text-xs">
-                    <Link
-                      href={`/admin/produits/${product.id}`}
-                      className="text-[#FF6B35] hover:underline"
-                    >
-                      Modifier
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-
-              {products.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-3 py-4 text-center text-sm text-slate-500"
-                  >
-                    Aucun produit pour l’instant.
-                  </td>
-                </tr>
-              )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      )}
+    </main>
   );
 }

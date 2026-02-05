@@ -1,129 +1,164 @@
 // app/page.tsx
-import { PrismaClient } from "@prisma/client";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
+import { HeroCarousel } from "@/components/home/HeroCarousel";
+import { prisma } from "@/lib/prisma";
+import { toProduct } from "@/lib/types";
+import { ProductCard } from "@/components/products/ProductCard";
+import Link from "next/link";
+import { CheckCircle, Zap, Wrench } from "lucide-react";
 
-const prisma = new PrismaClient();
+export const metadata = {
+  title: "ZIDA SOLAIRE | Énergie Solaire au Burkina Faso",
+  description:
+    "Installation, vente et maintenance de systèmes solaires photovoltaïques",
+};
 
 export default async function HomePage() {
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    orderBy: { order: "asc" },
-  });
+  // Gestion des erreurs de connexion DB
+  let featuredProducts: any[] = [];
+  
+  try {
+    const prismaProducts = await prisma.product.findMany({
+      where: {
+        isActive: true,
+        isFeatured: true,
+      },
+      take: 6,
+      orderBy: { createdAt: "desc" },
+    });
+    featuredProducts = prismaProducts.map(toProduct);
+  } catch (error) {
+    console.error("Erreur de connexion DB:", error);
+    // Continue sans produits
+  }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <>
       <Header />
+      <main>
+        {/* Hero Section avec Carousel */}
+        <HeroCarousel />
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8">
-        {/* Hero */}
-        <section className="grid gap-8 md:grid-cols-2 md:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF6B35]">
-              ZIDA SOLAIRE
+        {/* Section Pourquoi nous choisir */}
+        <section className="bg-white py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 text-center">
+              <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+                Pourquoi choisir ZIDA SOLAIRE ?
+              </h2>
+              <p className="mt-4 text-lg text-slate-600">
+                Votre partenaire de confiance pour l'énergie solaire
+              </p>
+            </div>
+
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Card 1 */}
+              <div className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-orange-50 to-white p-8 shadow-lg transition-all hover:scale-105 hover:shadow-2xl">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg">
+                  <CheckCircle className="h-8 w-8" />
+                </div>
+                <h3 className="mb-3 text-xl font-semibold text-slate-900">
+                  Installation Professionnelle
+                </h3>
+                <p className="text-slate-600">
+                  Nos techniciens certifiés garantissent une installation
+                  conforme aux normes internationales.
+                </p>
+              </div>
+
+              {/* Card 2 */}
+              <div className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50 to-white p-8 shadow-lg transition-all hover:scale-105 hover:shadow-2xl">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+                  <Zap className="h-8 w-8" />
+                </div>
+                <h3 className="mb-3 text-xl font-semibold text-slate-900">
+                  Garantie Étendue
+                </h3>
+                <p className="text-slate-600">
+                  Tous nos produits sont garantis jusqu'à 25 ans pour les
+                  panneaux solaires.
+                </p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-green-50 to-white p-8 shadow-lg transition-all hover:scale-105 hover:shadow-2xl">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-600 text-white shadow-lg">
+                  <Wrench className="h-8 w-8" />
+                </div>
+                <h3 className="mb-3 text-xl font-semibold text-slate-900">
+                  Maintenance & SAV
+                </h3>
+                <p className="text-slate-600">
+                  Un service après-vente réactif disponible 24/7 pour votre
+                  tranquillité.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Produits en vedette */}
+        {featuredProducts.length > 0 && (
+          <section className="bg-slate-50 py-16 sm:py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-12 text-center">
+                <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+                  Produits en vedette
+                </h2>
+                <p className="mt-4 text-lg text-slate-600">
+                  Découvrez notre sélection de produits populaires
+                </p>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              
+              {/* BOUTON VERT CLAIR - Texte NOIR */}
+              <div className="mt-12 text-center">
+                <Link
+                  href="/produits"
+                  className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-8 py-4 text-lg font-bold text-slate-900 shadow-lg transition-all hover:scale-105 hover:bg-emerald-500 hover:shadow-xl"
+                >
+                  Voir tous nos produits →
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Call to Action - BLEU CLAIR */}
+        <section className="bg-gradient-to-br from-blue-400 to-blue-500 py-16 sm:py-20">
+          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+              Prêt à passer à l'énergie solaire ?
+            </h2>
+            <p className="mt-4 text-lg text-white/95">
+              Contactez-nous pour une étude gratuite et personnalisée de votre
+              projet.
             </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-              Solutions solaires complètes pour les foyers et entreprises du
-              Burkina Faso.
-            </h1>
-            <p className="mt-4 text-sm text-slate-600 sm:text-base">
-              Vente d&apos;équipements solaires et électroniques, installation
-              clé en main, et service après-vente professionnel pour assurer une
-              énergie fiable au quotidien.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href="/produits"
-                className="rounded-lg bg-[#FF6B35] px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#e85f2f] transition"
+            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-lg border-2 border-white bg-white px-8 py-4 text-lg font-semibold text-blue-500 shadow-xl transition-all hover:scale-105 hover:bg-blue-50"
               >
-                Voir les produits
-              </a>
+                Demander un devis gratuit
+              </Link>
               <a
-                href="/services"
-                className="rounded-lg border border-[#FF6B35] px-5 py-2.5 text-sm font-semibold text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white transition"
+                href="tel:+22674339977"
+                className="inline-flex items-center justify-center rounded-lg border-2 border-white bg-transparent px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-white/10"
               >
-                Demander une installation
+                📞 Appelez-nous maintenant
               </a>
             </div>
-            <ul className="mt-6 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-              <li>• Paiement à la livraison</li>
-              <li>• Installation professionnelle</li>
-              <li>• Produits certifiés</li>
-              <li>• Conseil et dimensionnement</li>
-            </ul>
-          </div>
-
-          <div className="h-56 rounded-xl bg-gradient-to-br from-[#FF6B35] via-amber-400 to-yellow-300 shadow-lg md:h-72" />
-        </section>
-
-        {/* Catégories principales */}
-        <section className="mt-12">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Catégories principales
-            </h2>
-            <a
-              href="/produits"
-              className="text-xs font-medium text-[#FF6B35] hover:underline"
-            >
-              Voir tous les produits
-            </a>
-          </div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {categories.map((cat) => (
-              <a
-                key={cat.id}
-                href={`/produits?categorie=${cat.slug}`}
-                className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-[#FF6B35] hover:shadow-md"
-              >
-                <h3 className="text-sm font-semibold text-slate-900 group-hover:text-[#FF6B35]">
-                  {cat.name}
-                </h3>
-                {cat.description && (
-                  <p className="mt-2 text-xs text-slate-500">
-                    {cat.description}
-                  </p>
-                )}
-              </a>
-            ))}
-          </div>
-        </section>
-
-        {/* Services d’installation */}
-        <section className="mt-12 grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900">
-              Installation solaire
-            </h3>
-            <p className="mt-2 text-xs text-slate-600">
-              Dimensionnement, fourniture et pose de systèmes solaires complets
-              pour maisons, boutiques et entreprises.
-            </p>
-          </div>
-          <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900">
-              Installation électrique
-            </h3>
-            <p className="mt-2 text-xs text-slate-600">
-              Installations électriques conformes et sécurisées pour bâtiments
-              neufs ou rénovations.
-            </p>
-          </div>
-          <div className="rounded-xl bg-white p-5 shadow-sm border border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900">
-              Pompage & forage
-            </h3>
-            <p className="mt-2 text-xs text-slate-600">
-              Solutions de pompage solaire pour forages, châteaux d&apos;eau et
-              exploitation agricole.
-            </p>
           </div>
         </section>
       </main>
-
       <Footer />
       <WhatsAppButton />
-    </div>
+    </>
   );
 }

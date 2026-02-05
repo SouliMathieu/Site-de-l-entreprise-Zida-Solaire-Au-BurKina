@@ -15,10 +15,10 @@ type OrderStatus = (typeof ALLOWED_STATUSES)[number];
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = (await req.json()) as { status: OrderStatus };
 
     if (!ALLOWED_STATUSES.includes(body.status)) {

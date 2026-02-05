@@ -1,6 +1,20 @@
-import type { NextConfig } from 'next';
+// next.config.ts
+import type { NextConfig } from "next";
 
-const config: NextConfig = {
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/mathsoncloudinary/**",
+      },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com",
+      },
+    ],
+  },
 };
 
-export default config;
+export default nextConfig;

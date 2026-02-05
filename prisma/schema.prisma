@@ -232,6 +232,20 @@ enum InstallationStatus {
   CANCELLED
 }
 
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  subject   String
+  message   String   @db.Text
+  status    String   @default("NEW") // NEW, READ, REPLIED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contact_messages")
+}
+
 // ============================================
 // CONFIGURATION SITE
 // ============================================

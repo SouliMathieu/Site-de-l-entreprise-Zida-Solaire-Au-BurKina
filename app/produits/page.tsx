@@ -1,90 +1,73 @@
 // app/produits/page.tsx
 import { prisma } from "@/lib/prisma";
+import { toProduct } from "@/lib/types";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
-import { ProductCard } from "@/components/product/ProductCard";
-import { ProductFilterClient } from "@/components/product/ProductFilterClient";
+import { ProductCard } from "@/components/products/ProductCard";
 
 export const metadata = {
-  title: "Tous les produits | ZIDA SOLAIRE",
-  description:
-    "Équipements solaires, électriques et accessoires disponibles chez ZIDA SOLAIRE.",
+  title: "Nos Produits | ZIDA SOLAIRE",
+  description: "Découvrez notre gamme complète de produits solaires.",
 };
 
-interface ProduitsPageProps {
-  searchParams: Promise<{ categorie?: string }>;
-}
-
-export default async function ProduitsPage({ searchParams }: ProduitsPageProps) {
-  const { categorie = "" } = await searchParams;
-
-  const categories = await prisma.category.findMany({
+export default async function ProductsPage() {
+  const prismaProducts = await prisma.product.findMany({
     where: { isActive: true },
-    orderBy: { order: "asc" },
-  });
-
-  const products = await prisma.product.findMany({
-    where: {
-      isActive: true,
-      category: categorie ? { slug: categorie } : undefined,
-    },
-    include: {
-      category: {
-        select: { id: true, name: true },
-      },
-    },
+    include: { category: true },
     orderBy: { createdAt: "desc" },
-    take: 50,
   });
 
-  const productsForCard = products.map((p) => ({
-    ...p,
-    price: Number(p.price),
-    compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
-  }));
+  // Convertir les produits Prisma (Decimal → number)
+  const products = prismaProducts.map(toProduct);
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="container-zida flex-1 py-8">
-        {/* Titre + filtre */}
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Tous les produits
+      <main className="flex-1 bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h1 className="text-4xl font-bold text-slate-900 sm:text-5xl">
+              Nos Produits
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Équipements solaires, électriques et accessoires disponibles chez
-              ZIDA SOLAIRE.
+            <p className="mt-4 text-lg text-slate-600">
+              Découvrez notre sélection de produits solaires de qualité
             </p>
           </div>
 
-          <ProductFilterClient
-            currentCategorie={categorie}
-            categories={categories.map((c) => ({
-              id: c.id,
-              slug: c.slug,
-              name: c.name,
-            }))}
-          />
-        </section>
-
-        {/* Liste produits */}
-        <section className="mt-6">
-          {productsForCard.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              Aucun produit trouvé pour cette sélection.
-            </p>
+          {products.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-16 text-center shadow-lg">
+              <div className="mx-auto max-w-md">
+                <svg
+                  className="mx-auto h-16 w-16 text-slate-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                  />
+                </svg>
+                <h3 className="mt-4 text-xl font-semibold text-slate-900">
+                  Aucun produit disponible
+                </h3>
+                <p className="mt-2 text-slate-600">
+                  Notre catalogue sera bientôt disponible. Revenez plus tard !
+                </p>
+              </div>
+            </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {productsForCard.map((product) => (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           )}
-        </section>
+        </div>
       </main>
 
       <Footer />

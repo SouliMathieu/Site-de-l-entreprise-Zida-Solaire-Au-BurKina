@@ -1,0 +1,135 @@
+ZIDA-SOLAIRE/
+├── .next/
+├── app/
+│   ├── a-propos/
+│   │   └── page.tsx (M)
+│   ├── admin/
+│   │   ├── categories/
+│   │   │   ├── nouvelle/
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx (U)
+│   │   ├── commandes/
+│   │   │   ├── [id]/
+│   │   │   │   └── page.tsx (M)
+│   │   │   └── page.tsx (M)
+│   │   ├── demandes-installation/
+│   │   │   └── page.tsx
+│   │   ├── devis/
+│   │   │   ├── [id]/
+│   │   │   │   └── page.tsx (U)
+│   │   │   └── page.tsx (U)
+│   │   └── produits/
+│   │       └── page.tsx (U)
+│   ├── api/
+│   │   ├── admin/
+│   │   ├── categories/
+│   │   │   ├── [id]/
+│   │   │   │   └── route.ts (TS)
+│   │   │   └── route.ts (TS)
+│   │   ├── installation-requests/
+│   │   │   ├── [id]/
+│   │   │   │   └── status/
+│   │   │   │       └── route.ts (TS)
+│   │   │   └── route.ts (TS)
+│   │   ├── orders/
+│   │   │   ├── [id]/
+│   │   │   │   └── status/
+│   │   │   │       └── route.ts (TS)
+│   │   │   └── route.ts (TS)
+│   │   ├── products/
+│   │   │   ├── [id]/
+│   │   │   │   └── route.ts (TS)
+│   │   │   └── route.ts (TS)
+│   │   ├── checkout/
+│   │   │   └── route.ts (TS)
+│   │   ├── contact/
+│   │   │   └── route.ts (TS)
+│   │   └── upload/
+│   │       └── route.ts (TS)
+│   ├── checkout/
+│   │   └── page.tsx
+│   ├── commande/
+│   │   ├── succes/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── contact/
+│   │   └── page.tsx
+│   ├── demande-installation/
+│   │   └── page.tsx
+│   ├── devis/
+│   │   └── page.tsx
+│   ├── panier/
+│   │   └── page.tsx
+│   ├── produits/
+│   │   ├── [slug]/
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── services/
+│   │   └── page.tsx
+│   ├── layout.tsx
+│   ├── loading.tsx
+│   ├── not-found.tsx
+│   ├── page.tsx
+│   └── sitemap.ts
+├── components/
+│   ├── admin/
+│   │   ├── AdminNav.tsx
+│   │   ├── CategoryFormClient.tsx
+│   │   ├── DevisStatusClient.tsx
+│   │   ├── EditProductFormClient.tsx
+│   │   ├── ImageUploader.tsx
+│   │   ├── layout.tsx
+│   │   ├── NewProductFormClient.tsx
+│   │   ├── OrdersFilter.tsx
+│   │   ├── OrderStatusClient.tsx
+│   │   └── OrderStatusFormClient.tsx
+│   ├── cart/
+│   │   └── CartClient.tsx
+│   ├── checkout/
+│   │   └── CheckoutClient.tsx
+│   ├── common/
+│   │   ├── MiniCart.tsx
+│   │   └── WhatsAppButton.tsx
+│   ├── contact/
+│   │   └── ContactForm.tsx
+│   ├── devis/
+│   │   └── DevisFormClient.tsx
+│   ├── install/
+│   │   └── InstallationRequestFormClient.tsx
+│   ├── layout/
+│   │   ├── Footer.tsx
+│   │   └── Header.tsx
+│   └── products/
+│       ├── ProductCard.tsx
+│       ├── ProductDetailClient.tsx
+│       └── ProductFilterClient.tsx
+├── hooks/
+│   └── useCart.ts
+├── lib/
+│   ├── prisma.ts
+│   ├── useCart.ts  // Note: doublon avec hooks/useCart.ts
+│   └── utils.ts
+├── node_modules/
+├── prisma/
+│   ├── migrations/
+│   │   └── 20260127170749_init/
+│   │       └── migration.sql
+│   ├── migration_lock.toml
+│   ├── schema.prisma
+│   └── seed.ts
+├── public/
+│   └── favicon.ico
+├── store/
+│   └── cart-store.ts
+├── .env
+├── .gitignore
+├── components.json
+├── eslint.config.mjs
+├── globals.css
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── README.md
+└── tsconfig.json

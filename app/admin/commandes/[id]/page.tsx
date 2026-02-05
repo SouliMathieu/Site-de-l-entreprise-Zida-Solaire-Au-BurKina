@@ -4,7 +4,7 @@ import Link from "next/link";
 import { OrderStatusClient } from "@/components/admin/OrderStatusClient";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export const metadata = {
@@ -13,8 +13,10 @@ export const metadata = {
 };
 
 export default async function AdminOrderDetailPage({ params }: PageProps) {
+  const { id } = await params;
+
   const order = await prisma.order.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       customer: true,
       items: true,
