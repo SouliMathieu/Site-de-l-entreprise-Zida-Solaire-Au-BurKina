@@ -22,10 +22,10 @@ export async function PUT(request: Request, { params }: Params) {
     const category = await prisma.category.update({
       where: { id },
       data: {
-        name,
+        name: name.trim(),
         slug: slug.toLowerCase().trim(),
-        description: description || "",
-        order: order || 0,
+        description: description?.trim() || "",
+        order: Number.isFinite(order) ? order : 0,
         isActive: isActive ?? true,
       },
     });
@@ -38,12 +38,14 @@ export async function PUT(request: Request, { params }: Params) {
         { status: 404 }
       );
     }
+
     if (error.code === "P2002") {
       return NextResponse.json(
-        { error: "Ce slug existe déjà" },
+        { error: "Ce slug existe déjà. Merci d'en choisir un autre." },
         { status: 400 }
       );
     }
+
     console.error("Error updating category:", error);
     return NextResponse.json(
       { error: "Erreur lors de la modification de la catégorie" },
@@ -56,7 +58,6 @@ export async function DELETE(request: Request, { params }: Params) {
   try {
     const { id } = await params;
 
-    // Vérifier si la catégorie a des produits
     const count = await prisma.product.count({
       where: { categoryId: id },
     });
@@ -64,15 +65,13 @@ export async function DELETE(request: Request, { params }: Params) {
     if (count > 0) {
       return NextResponse.json(
         {
-          error: `Impossible de supprimer: ${count} produit(s) utilisent cette catégorie`,
+          error: `Impossible de supprimer: ${count} produit(s) utilisent cette catégorie.`,
         },
         { status: 400 }
       );
     }
 
-    await prisma.category.delete({
-      where: { id },
-    });
+    await prisma.category.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -82,6 +81,7 @@ export async function DELETE(request: Request, { params }: Params) {
         { status: 404 }
       );
     }
+
     console.error("Error deleting category:", error);
     return NextResponse.json(
       { error: "Erreur lors de la suppression de la catégorie" },

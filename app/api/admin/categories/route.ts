@@ -16,10 +16,10 @@ export async function POST(request: Request) {
 
     const category = await prisma.category.create({
       data: {
-        name,
+        name: name.trim(),
         slug: slug.toLowerCase().trim(),
-        description: description || "",
-        order: order || 0,
+        description: description?.trim() || "",
+        order: Number.isFinite(order) ? order : 0,
         isActive: isActive ?? true,
       },
     });
@@ -27,11 +27,13 @@ export async function POST(request: Request) {
     return NextResponse.json(category, { status: 201 });
   } catch (error: any) {
     if (error.code === "P2002") {
+      // Contrainte d’unicité (slug)
       return NextResponse.json(
-        { error: "Ce slug existe déjà" },
+        { error: "Ce slug existe déjà. Merci d'en choisir un autre." },
         { status: 400 }
       );
     }
+
     console.error("Error creating category:", error);
     return NextResponse.json(
       { error: "Erreur lors de la création de la catégorie" },

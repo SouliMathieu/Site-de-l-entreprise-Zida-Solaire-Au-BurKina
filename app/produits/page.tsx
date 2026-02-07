@@ -5,73 +5,148 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/common/WhatsAppButton";
 import { ProductCard } from "@/components/products/ProductCard";
+import { ProductFilters } from "@/components/products/ProductFilterClient";
 
 export const metadata = {
   title: "Nos Produits | ZIDA SOLAIRE",
   description: "Découvrez notre gamme complète de produits solaires.",
 };
 
-export default async function ProductsPage() {
-  const prismaProducts = await prisma.product.findMany({
+interface ProductsPageProps {
+  searchParams: Promise<{
+    categorie?: string;
+    stock?: string;
+    prixMin?: string;
+    prixMax?: string;
+    tri?: string;
+  }>;
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  // IMPORTANT : Await searchParams (Next.js 16+)
+  const params = await searchParams;
+
+  // Récupérer les catégories
+  const categories = await prisma.category.findMany({
     where: { isActive: true },
-    include: { category: true },
-    orderBy: { createdAt: "desc" },
+    select: { id: true, slug: true, name: true },
+    orderBy: { name: "asc" },
   });
 
-  // Convertir les produits Prisma (Decimal → number)
+  // Construire les conditions de filtrage
+  const whereClause: any = { isActive: true };
+
+  if (params.categorie) {
+    whereClause.category = { slug: params.categorie };
+  }
+
+  if (params.stock === "disponible") {
+    whereClause.stock = { gt: 0 };
+  }
+
+  if (params.prixMin || params.prixMax) {
+    whereClause.price = {};
+    if (params.prixMin) {
+      whereClause.price.gte = Number(params.prixMin);
+    }
+    if (params.prixMax) {
+      whereClause.price.lte = Number(params.prixMax);
+    }
+  }
+
+  // Déterminer l'ordre de tri
+  let orderBy: any = { createdAt: "desc" };
+  
+  switch (params.tri) {
+    case "prix-asc":
+      orderBy = { price: "asc" };
+      break;
+    case "prix-desc":
+      orderBy = { price: "desc" };
+      break;
+    case "nouveautes":
+      orderBy = { createdAt: "desc" };
+      break;
+    case "populaires":
+      orderBy = { viewCount: "desc" };
+      break;
+    case "meilleures-ventes":
+      orderBy = { salesCount: "desc" };
+      break;
+  }
+
+  // Récupérer les produits
+  const prismaProducts = await prisma.product.findMany({
+    where: whereClause,
+    include: { category: true },
+    orderBy,
+  });
+
   const products = prismaProducts.map(toProduct);
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
+  // Calculer les prix min/max pour le filtre
+  const allProducts = await prisma.product.findMany({
+    where: { isActive: true },
+    select: { price: true },
+  });
+  
+  const prices = allProducts.map(p => Number(p.price));
+  const minPrice = prices.length > 0 ? Math.floor(Math.min(...prices)) : 0;
+  const maxPrice = prices.length > 0 ? Math.ceil(Math.max(...prices)) : 1000000;
 
-      <main className="flex-1 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h1 className="text-4xl font-bold text-slate-900 sm:text-5xl">
+  return (
+    <>
+      <Header />
+      <main className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          {/* En-tête */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               Nos Produits
             </h1>
-            <p className="mt-4 text-lg text-slate-600">
-              Découvrez notre sélection de produits solaires de qualité
+            <p className="text-gray-600">
+              {products.length} produit{products.length > 1 ? "s" : ""} disponible{products.length > 1 ? "s" : ""}
             </p>
           </div>
 
-          {products.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-16 text-center shadow-lg">
-              <div className="mx-auto max-w-md">
-                <svg
-                  className="mx-auto h-16 w-16 text-slate-300"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                  />
-                </svg>
-                <h3 className="mt-4 text-xl font-semibold text-slate-900">
-                  Aucun produit disponible
-                </h3>
-                <p className="mt-2 text-slate-600">
-                  Notre catalogue sera bientôt disponible. Revenez plus tard !
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {/* Filtres */}
+          <div className="mb-6">
+            <ProductFilters
+              categories={categories}
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              initialFilters={{
+                categorie: params.categorie,
+                stock: params.stock,
+                prixMin: params.prixMin,
+                prixMax: params.prixMax,
+                tri: params.tri,
+              }}
+            />
+          </div>
+
+          {/* Grille de produits */}
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                Aucun produit trouvé
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Essayez de modifier vos filtres pour voir plus de résultats
+              </p>
+            </div>
           )}
         </div>
       </main>
-
       <Footer />
       <WhatsAppButton />
-    </div>
+    </>
   );
 }
