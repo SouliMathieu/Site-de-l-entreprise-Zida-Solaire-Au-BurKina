@@ -74,7 +74,6 @@ export async function DELETE(request: Request, { params }: Params) {
   try {
     const { id } = await params;
 
-    // Vérifier si la catégorie a des produits
     const count = await prisma.product.count({
       where: { categoryId: id },
     });
