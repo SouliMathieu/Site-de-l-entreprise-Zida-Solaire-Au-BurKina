@@ -2,6 +2,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const NOT_FOUND_ERROR = "P2025";
+const UNIQUE_CONSTRAINT_ERROR = "P2002";
+
 interface Params {
   params: Promise<{ id: string }>;
 }
@@ -10,7 +13,20 @@ export async function PUT(request: Request, { params }: Params) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, slug, description, order, isActive } = body;
+
+    const {
+      name,
+      slug,
+      description,
+      order,
+      isActive,
+    }: {
+      name?: string;
+      slug?: string;
+      description?: string;
+      order?: number;
+      isActive?: boolean;
+    } = body;
 
     if (!name || !slug) {
       return NextResponse.json(
@@ -25,23 +41,23 @@ export async function PUT(request: Request, { params }: Params) {
         name: name.trim(),
         slug: slug.toLowerCase().trim(),
         description: description?.trim() || "",
-        order: Number.isFinite(order) ? order : 0,
+        order: Number.isFinite(order) ? (order as number) : 0,
         isActive: isActive ?? true,
       },
     });
 
     return NextResponse.json(category);
   } catch (error: any) {
-    if (error.code === "P2025") {
+    if (error.code === NOT_FOUND_ERROR) {
       return NextResponse.json(
         { error: "Catégorie introuvable" },
         { status: 404 }
       );
     }
 
-    if (error.code === "P2002") {
+    if (error.code === UNIQUE_CONSTRAINT_ERROR) {
       return NextResponse.json(
-        { error: "Ce slug existe déjà. Merci d'en choisir un autre." },
+        { error: "Ce slug existe déjà" },
         { status: 400 }
       );
     }
@@ -58,6 +74,7 @@ export async function DELETE(request: Request, { params }: Params) {
   try {
     const { id } = await params;
 
+    // Vérifier si la catégorie a des produits
     const count = await prisma.product.count({
       where: { categoryId: id },
     });
@@ -65,17 +82,19 @@ export async function DELETE(request: Request, { params }: Params) {
     if (count > 0) {
       return NextResponse.json(
         {
-          error: `Impossible de supprimer: ${count} produit(s) utilisent cette catégorie.`,
+          error: `Impossible de supprimer: ${count} produit(s) utilisent cette catégorie`,
         },
         { status: 400 }
       );
     }
 
-    await prisma.category.delete({ where: { id } });
+    await prisma.category.delete({
+      where: { id },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    if (error.code === "P2025") {
+    if (error.code === NOT_FOUND_ERROR) {
       return NextResponse.json(
         { error: "Catégorie introuvable" },
         { status: 404 }
