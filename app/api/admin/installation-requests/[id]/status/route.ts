@@ -14,12 +14,13 @@ const ALLOWED_STATUSES = [
 
 type RequestStatus = (typeof ALLOWED_STATUSES)[number];
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+interface Params {
+  params: Promise<{ id: string }>;
+}
+
+export async function PATCH(req: Request, { params }: Params) {
   try {
-    const { id } = params;
+    const { id } = await params; // ✅ Ajout de await
     const body = (await req.json()) as { status: RequestStatus };
 
     if (!ALLOWED_STATUSES.includes(body.status)) {
