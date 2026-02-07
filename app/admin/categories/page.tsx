@@ -1,4 +1,5 @@
 // app/admin/categories/page.tsx
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { CategoryActionsClient } from "@/components/admin/CategoryActionsClient";
