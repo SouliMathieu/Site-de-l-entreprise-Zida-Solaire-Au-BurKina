@@ -128,10 +128,10 @@ export default function ContactPage() {
                         +226 74 33 99 77
                       </a>
                       <a
-                        href="tel:+22670123456"
+                        href="tel:+22655220303"
                         className="block text-orange-600 transition-colors hover:text-orange-700"
                       >
-                        +226 70 12 34 56
+                        +226 55 22 03 03
                       </a>
                     </div>
                   </div>
@@ -146,10 +146,10 @@ export default function ContactPage() {
                         Email
                       </h3>
                       <a
-                        href="mailto:contact@zidasolaire.bf"
+                        href="mailto:Boubacarzida71@gmail.com"
                         className="text-orange-600 transition-colors hover:text-orange-700"
                       >
-                        contact@zidasolaire.bf
+                        Boubacarzida71@gmail.com
                       </a>
                     </div>
                   </div>
@@ -164,7 +164,7 @@ export default function ContactPage() {
                         Horaires
                       </h3>
                       <p className="text-slate-600">
-                        Lundi – Samedi : 8h00 – 18h00
+                        Lundi – Samedi : 8h00 – 21h00
                       </p>
                       <p className="text-slate-600">Dimanche : sur rendez-vous</p>
                     </div>
