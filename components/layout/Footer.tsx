@@ -147,7 +147,7 @@ export function Footer() {
               <li className="flex items-start gap-2">
                 <Mail className="mt-0.5 h-4 w-4 flex-shrink-0 text-orange-500" />
                 <a
-                  href="mailto:contact@zidasolaire.bf"
+                  href="mailto:Boubacarzida71@gmail.com"
                   className="text-slate-300 transition-colors hover:text-orange-500"
                 >
                   contact@zidasolaire.bf
