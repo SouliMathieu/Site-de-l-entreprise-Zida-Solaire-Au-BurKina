@@ -214,7 +214,26 @@ model InstallationRequest {
   @@index([requestNumber])
   @@map("installation_requests")
 }
+// ============================================
+// DEMANDES DE DÉPANNAGE
+// ============================================
+model RepairRequest {
+  id                  String   @id @default(cuid())
+  name                String
+  phone               String
+  address             String?
+  installationType    String?
+  problemDescription  String   @db.Text
+  urgency             String   @default("normal")
+  installedByZida     Boolean  @default(false)
+  status              String   @default("pending")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
+  @@index([status])
+  @@index([createdAt])
+  @@map("repair_requests")
+}
 enum InstallationType {
   SOLAR
   ELECTRICAL
