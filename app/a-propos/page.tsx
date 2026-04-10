@@ -72,7 +72,7 @@ export default function AboutPage() {
               </p>
 
               <p className="text-slate-700 leading-relaxed mb-4">
-                Aujourd’hui, ZIDA SOLAIRE réalise chaque année de nombreuses
+                Aujourd’hui,ZIDA SOLAIRE réalise chaque année de nombreuses
                 installations solaires et électriques dans tout le pays, et
                 accompagne ses clients dans des projets{" "}
                 <span className="font-semibold">
