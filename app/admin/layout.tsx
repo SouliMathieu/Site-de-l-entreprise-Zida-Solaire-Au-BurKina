@@ -1,6 +1,7 @@
 // app/admin/layout.tsx
 import { AdminNav } from "@/components/admin/AdminNav";
-
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const metadata = {
   title: "Admin - ZIDA SOLAIRE",
   description: "Panel d'administration ZIDA SOLAIRE",
