@@ -61,7 +61,7 @@ export default function AboutPage() {
 
               <p className="text-slate-700 leading-relaxed mb-4">
                 L’entreprise commence par la vente de matériel solaire et quelques
-                installations chez des particuliers à Ouagadougou. Année après
+                installations chez des particuliers à Ouagadougou. Années après
                 année, grâce au bouche‑à‑oreille et à la qualité du service, ZIDA
                 SOLAIRE se développe et gagne la confiance{" "}
                 <span className="font-semibold">
