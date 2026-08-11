@@ -56,7 +56,7 @@ export function EditProductFormClient({ product, categories }: Props) {
 
     try {
       const res = await fetch(`/api/admin/products/${product.id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
