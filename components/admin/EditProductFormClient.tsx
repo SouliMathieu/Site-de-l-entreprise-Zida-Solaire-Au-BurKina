@@ -42,7 +42,6 @@ export function EditProductFormClient({ product, categories }: Props) {
       compareAtPrice: formData.get("compareAtPrice")
         ? parseFloat(formData.get("compareAtPrice") as string)
         : null,
-      sku: formData.get("sku") as string,
       stock: parseInt(formData.get("stock") as string),
       lowStockThreshold: parseInt(formData.get("lowStockThreshold") as string),
       warranty: formData.get("warranty") as string,
@@ -203,15 +202,18 @@ export function EditProductFormClient({ product, categories }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-slate-700">
-              SKU *
+              SKU
             </label>
             <input
               type="text"
-              name="sku"
-              required
-              defaultValue={product.sku || ""}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+              value={product.sku || ""}
+              disabled
+              readOnly
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-slate-500"
             />
+            <p className="mt-1 text-xs text-slate-500">
+              Le SKU est généré automatiquement à la création et ne peut pas être modifié.
+            </p>
           </div>
 
           <div>
