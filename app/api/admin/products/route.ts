@@ -2,6 +2,32 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Génère un SKU lisible et garanti unique en base, ex: PANEL-A3F9K2
+async function generateUniqueSku(name: string): Promise<string> {
+  const prefix =
+    name
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/(^-+|-+$)/g, "")
+      .slice(0, 12) || "PROD";
+
+  // Quelques tentatives pour éviter toute collision, même improbable
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const candidate = `${prefix}-${suffix}`;
+
+    const existing = await prisma.product.findUnique({
+      where: { sku: candidate },
+      select: { id: true },
+    });
+
+    if (!existing) return candidate;
+  }
+
+  // Filet de sécurité ultime : timestamp, quasi impossible d'entrer en collision
+  return `${prefix}-${Date.now().toString(36).toUpperCase()}`;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -14,7 +40,6 @@ export async function POST(request: Request) {
       shortDescription,
       price,
       compareAtPrice,
-      sku,
       stock,
       lowStockThreshold,
       warranty,
@@ -30,7 +55,6 @@ export async function POST(request: Request) {
       shortDescription?: string;
       price: number;
       compareAtPrice?: number | null;
-      sku: string;
       stock: number;
       lowStockThreshold?: number;
       warranty?: string | null;
@@ -40,12 +64,14 @@ export async function POST(request: Request) {
       isFeatured?: boolean;
     };
 
-    if (!name || !categoryId || !description || !sku) {
+    if (!name || !categoryId || !description) {
       return NextResponse.json(
-        { error: "Nom, catégorie, description et SKU sont obligatoires." },
+        { error: "Nom, catégorie et description sont obligatoires." },
         { status: 400 }
       );
     }
+
+    const sku = await generateUniqueSku(name);
 
     // Génération auto du slug si vide
     const cleanSlug =
