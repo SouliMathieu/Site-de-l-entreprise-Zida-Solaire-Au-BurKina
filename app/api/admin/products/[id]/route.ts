@@ -30,9 +30,13 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const { id } = await params;
     const body = await request.json();
 
+    // Le SKU est généré une seule fois à la création et ne doit jamais
+    // être modifié depuis le formulaire d'édition (évite les collisions).
+    const { sku: _ignoredSku, ...data } = body;
+
     const product = await prisma.product.update({
       where: { id },
-      data: body,
+      data,
     });
 
     return NextResponse.json(product);
