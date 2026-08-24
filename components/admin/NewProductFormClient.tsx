@@ -37,7 +37,6 @@ export function NewProductFormClient({ categories }: Props) {
       compareAtPrice: formData.get("compareAtPrice")
         ? parseFloat(formData.get("compareAtPrice") as string)
         : null,
-      sku: formData.get("sku") as string,
       stock: parseInt(formData.get("stock") as string),
       lowStockThreshold: parseInt(formData.get("lowStockThreshold") as string),
       warranty: formData.get("warranty") as string,
@@ -184,19 +183,6 @@ export function NewProductFormClient({ categories }: Props) {
               type="number"
               name="compareAtPrice"
               step="0.01"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              SKU *
-            </label>
-            <input
-              type="text"
-              name="sku"
-              required
-              placeholder="Ex: PANEL-400W"
               className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
             />
           </div>
