@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminUnauthorized, requireAdminAuth } from "@/lib/admin-auth";
+import { createCustomerNotification, INSTALLATION_STATUS_COPY } from "@/lib/customer-notifications";
 
 const ALLOWED_STATUSES = [
   "NEW",
@@ -29,6 +30,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Statut invalide." }, { status: 400 });
     }
 
+    const current = await prisma.installationRequest.findUnique({ where: { id } });
+    if (!current) return NextResponse.json({ error: "Demande introuvable." }, { status: 404 });
+
     const request = await prisma.installationRequest.update({
       where: { id },
       data: {
@@ -36,6 +40,21 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(body.status === "COMPLETED" && { completedAt: new Date() }),
       },
     });
+
+    if (current.status !== body.status) {
+      const copy = INSTALLATION_STATUS_COPY[body.status];
+      if (copy) {
+        await createCustomerNotification({
+          phone: request.customerPhone,
+          type: "installation",
+          title: copy.title,
+          message: copy.message(request.requestNumber),
+          entityType: "installation",
+          entityId: request.id,
+          route: "Installations",
+        });
+      }
+    }
 
     return NextResponse.json(request, { status: 200 });
   } catch (error) {
