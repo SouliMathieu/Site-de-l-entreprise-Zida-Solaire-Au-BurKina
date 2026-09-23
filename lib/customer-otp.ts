@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 const OTP_TTL_MS = 5 * 60 * 1000;
 const OTP_RESEND_DELAY_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
+export type CustomerOtpPurpose = "login" | "register" | "phone_change";
 
 function getSecret() {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -61,7 +62,7 @@ async function sendOtpSms(phone: string, code: string) {
   return { delivered: true };
 }
 
-export async function createOtpChallenge(rawPhone: string, purpose: "login" | "register") {
+export async function createOtpChallenge(rawPhone: string, purpose: CustomerOtpPurpose) {
   const phone = normalizePhone(rawPhone);
   const recent = await prisma.customerOtpChallenge.findFirst({
     where: { phone, purpose, consumedAt: null },
@@ -105,7 +106,7 @@ export async function verifyOtpChallenge(params: {
   challengeId: string;
   rawPhone: string;
   code: string;
-  purpose: "login" | "register";
+  purpose: CustomerOtpPurpose;
 }) {
   const phone = normalizePhone(params.rawPhone);
   const challenge = await prisma.customerOtpChallenge.findUnique({ where: { id: params.challengeId } });
