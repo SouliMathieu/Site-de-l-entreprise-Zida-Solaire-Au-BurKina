@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isUnauthorized, requireCustomerAuth } from "@/lib/customer-auth";
+import { phoneLookupCandidates } from "@/lib/customer-otp";
 
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireCustomerAuth(req);
+    const phones = phoneLookupCandidates(auth.phone);
 
     const repairs = await prisma.repairRequest.findMany({
-      where: { phone: auth.phone },
+      where: { phone: { in: phones } },
       orderBy: { createdAt: "desc" },
     });
 
