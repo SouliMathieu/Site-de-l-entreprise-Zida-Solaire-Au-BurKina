@@ -47,6 +47,7 @@ model Customer {
   orders        Order[]
   notifications CustomerNotification[]
   preferences   CustomerNotificationPreference?
+  pushTokens    CustomerPushToken[]
 
   @@map("customers")
 }
@@ -102,6 +103,23 @@ model CustomerNotificationPreference {
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@map("customer_notification_preferences")
+}
+
+model CustomerPushToken {
+  id         String    @id @default(cuid())
+  customerId String
+  token      String    @unique
+  platform   String
+  deviceId   String?
+  active     Boolean   @default(true)
+  lastSeenAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, active])
+  @@map("customer_push_tokens")
 }
 
 // ============================================
