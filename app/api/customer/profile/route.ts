@@ -1,25 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jwtVerify } from "jose";
+import { isUnauthorized, requireCustomerAuth } from "@/lib/customer-auth";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "your-secret-key-change-this"
-);
-
-// GET - Récupérer le profil
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-
-    const customer = await prisma.customer.findUnique({
-      where: { id: payload.id as string },
-    });
+    const auth = await requireCustomerAuth(req);
+    const customer = await prisma.customer.findUnique({ where: { id: auth.id } });
 
     if (!customer) {
       return NextResponse.json({ error: "Client non trouvé" }, { status: 404 });
@@ -34,29 +20,24 @@ export async function GET(req: NextRequest) {
       city: customer.city,
     });
   } catch (error) {
+    if (isUnauthorized(error)) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
     console.error("Get profile error:", error);
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
+    return NextResponse.json({ error: "Erreur lors du chargement du profil" }, { status: 500 });
   }
 }
 
-// PATCH - Mettre à jour le profil
 export async function PATCH(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-
+    const auth = await requireCustomerAuth(req);
     const { firstName, lastName, email, phone, address, city } = await req.json();
 
     const customer = await prisma.customer.update({
-      where: { id: payload.id as string },
+      where: { id: auth.id },
       data: {
         ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
+        ...(lastName !== undefined && { lastName }),
         ...(email !== undefined && { email: email || null }),
         ...(phone && { phone }),
         ...(address !== undefined && { address }),
@@ -73,6 +54,9 @@ export async function PATCH(req: NextRequest) {
       city: customer.city,
     });
   } catch (error) {
+    if (isUnauthorized(error)) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
     console.error("Update profile error:", error);
     return NextResponse.json({ error: "Erreur de mise à jour" }, { status: 500 });
   }
