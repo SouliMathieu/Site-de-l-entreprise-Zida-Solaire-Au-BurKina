@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   FileText,
   FolderTree,
+  Wrench,
   LogOut,
 } from "lucide-react";
 import { useState } from "react";
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { href: "/admin/categories", label: "Catégories", icon: FolderTree },
   { href: "/admin/commandes", label: "Commandes", icon: ShoppingCart },
   { href: "/admin/devis", label: "Devis", icon: FileText },
+  { href: "/admin/sav", label: "SAV", icon: Wrench },
 ];
 
 export function AdminNav() {
@@ -46,33 +48,26 @@ export function AdminNav() {
   return (
     <header className="border-b border-orange-100 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo + nom */}
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-md">
             <span className="text-lg font-bold">Z</span>
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-bold text-gray-900">
-              ZIDA SOLAIRE · Admin
-            </p>
-            <p className="text-xs text-gray-500">Gestion e‑commerce</p>
+            <p className="text-sm font-bold text-gray-900">ZIDA SOLAIRE · Admin</p>
+            <p className="text-xs text-gray-500">Gestion e-commerce & services</p>
           </div>
         </div>
 
-        {/* Navigation centrale */}
         <nav className="hidden md:flex items-center gap-1 bg-gray-50 rounded-full px-1 py-1 border border-gray-100 shadow-sm">
           {NAV_ITEMS.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  isActive
-                    ? "bg-white text-orange-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-white/80"
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  isActive ? "bg-white text-orange-600 shadow-sm" : "text-gray-600 hover:text-gray-900 hover:bg-white/80"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -82,7 +77,6 @@ export function AdminNav() {
           })}
         </nav>
 
-        {/* Déconnexion */}
         <button
           type="button"
           onClick={handleLogout}
@@ -94,18 +88,16 @@ export function AdminNav() {
         </button>
       </div>
 
-      {/* Nav responsive (mobile) */}
-      <nav className="md:hidden border-t border-gray-100 bg-white">
-        <ul className="flex justify-around py-1">
+      <nav className="md:hidden border-t border-gray-100 bg-white overflow-x-auto">
+        <ul className="flex min-w-max justify-around py-1 px-2">
           {NAV_ITEMS.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             const Icon = item.icon;
             return (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex flex-col items-center px-3 py-1 text-[11px] font-medium transition-colors ${
+                  className={`flex min-w-[64px] flex-col items-center px-2 py-1 text-[11px] font-medium transition-colors ${
                     isActive ? "text-orange-600" : "text-gray-500"
                   }`}
                 >
