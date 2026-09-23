@@ -1,6 +1,8 @@
 // app/api/installation-requests/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizePhone } from "@/lib/customer-otp";
+import { createCustomerNotification } from "@/lib/customer-notifications";
 
 function generateRequestNumber() {
   const now = new Date();
@@ -38,18 +40,22 @@ export async function POST(request: Request) {
     };
 
     if (!firstName || !lastName || !phone || !description) {
-      return NextResponse.json(
-        { error: "Champs obligatoires manquants." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Champs obligatoires manquants." }, { status: 400 });
+    }
+
+    let normalizedPhone: string;
+    try {
+      normalizedPhone = normalizePhone(phone);
+    } catch {
+      return NextResponse.json({ error: "Numéro de téléphone invalide" }, { status: 400 });
     }
 
     const requestNumber = generateRequestNumber();
-    const req = await prisma.installationRequest.create({
+    const installationRequest = await prisma.installationRequest.create({
       data: {
         requestNumber,
         customerName: `${firstName} ${lastName}`,
-        customerPhone: phone,
+        customerPhone: normalizedPhone,
         customerEmail: email || null,
         customerAddress: address || "",
         installationType: type,
@@ -60,8 +66,22 @@ export async function POST(request: Request) {
       },
     });
 
+    try {
+      await createCustomerNotification({
+        phone: normalizedPhone,
+        type: "installation",
+        title: "Demande reçue",
+        message: `Votre demande ${installationRequest.requestNumber} a bien été reçue par ZIDA SOLAIRE.`,
+        entityType: "installation",
+        entityId: installationRequest.id,
+        route: "Installations",
+      });
+    } catch (notificationError) {
+      console.error("Installation notification error:", notificationError);
+    }
+
     return NextResponse.json(
-      { requestNumber: req.requestNumber, requestId: req.id },
+      { requestNumber: installationRequest.requestNumber, requestId: installationRequest.id },
       { status: 201 }
     );
   } catch (error) {
