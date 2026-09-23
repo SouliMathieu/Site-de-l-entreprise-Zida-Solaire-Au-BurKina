@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizePhone } from "@/lib/customer-otp";
+import { createCustomerNotification } from "@/lib/customer-notifications";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,11 +22,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Créer la demande de dépannage
+    let normalizedPhone: string;
+    try {
+      normalizedPhone = normalizePhone(phone);
+    } catch {
+      return NextResponse.json({ error: "Numéro de téléphone invalide" }, { status: 400 });
+    }
+
     const repairRequest = await prisma.repairRequest.create({
       data: {
         name,
-        phone,
+        phone: normalizedPhone,
         address: address || "",
         installationType: installationType || "",
         problemDescription,
@@ -33,6 +41,20 @@ export async function POST(req: NextRequest) {
         status: "pending",
       },
     });
+
+    try {
+      await createCustomerNotification({
+        phone: normalizedPhone,
+        type: "sav",
+        title: "Ticket SAV reçu",
+        message: `Votre demande SAV ${repairRequest.id} a bien été reçue par ZIDA SOLAIRE.`,
+        entityType: "repair",
+        entityId: repairRequest.id,
+        route: "RepairTickets",
+      });
+    } catch (notificationError) {
+      console.error("Repair notification error:", notificationError);
+    }
 
     return NextResponse.json(
       {
@@ -45,23 +67,6 @@ export async function POST(req: NextRequest) {
     console.error("Repair request creation error:", error);
     return NextResponse.json(
       { error: "Erreur lors de la création de la demande" },
-      { status: 500 }
-    );
-  }
-}
-
-// GET - Récupérer toutes les demandes de dépannage (pour admin)
-export async function GET(req: NextRequest) {
-  try {
-    const repairRequests = await prisma.repairRequest.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json(repairRequests);
-  } catch (error) {
-    console.error("Get repair requests error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des demandes" },
       { status: 500 }
     );
   }
