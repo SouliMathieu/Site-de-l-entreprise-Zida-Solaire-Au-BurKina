@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { signCustomerToken } from "@/lib/customer-auth";
+import {
+  createOtpChallenge,
+  normalizePhone,
+  otpErrorResponseMessage,
+  phoneLookupCandidates,
+} from "@/lib/customer-otp";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,37 +15,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nom et téléphone requis" }, { status: 400 });
     }
 
-    const existingCustomer = await prisma.customer.findFirst({ where: { phone } });
+    const existingCustomer = await prisma.customer.findFirst({
+      where: { phone: { in: phoneLookupCandidates(phone) } },
+    });
     if (existingCustomer) {
       return NextResponse.json({ error: "Un compte existe déjà avec ce numéro" }, { status: 409 });
     }
 
-    const customer = await prisma.customer.create({
-      data: {
-        firstName,
-        lastName: lastName || "",
-        email: email || null,
-        phone,
-        address: address || "",
-        city: city || "Ouagadougou",
-      },
-    });
-
-    const token = await signCustomerToken(customer);
-
+    const challenge = await createOtpChallenge(phone, "register");
     return NextResponse.json({
-      user: {
-        id: customer.id,
-        name: `${customer.firstName} ${customer.lastName}`,
-        email: customer.email,
-        phone: customer.phone,
-        address: customer.address,
-        city: customer.city,
+      challengeId: challenge.challengeId,
+      phone: normalizePhone(phone),
+      expiresIn: challenge.expiresIn,
+      pendingProfile: {
+        firstName: String(firstName).trim(),
+        lastName: String(lastName || "").trim(),
+        email: email ? String(email).trim() : "",
+        address: address ? String(address).trim() : "",
+        city: city ? String(city).trim() : "Ouagadougou",
       },
-      token,
-    }, { status: 201 });
+      ...(challenge.devCode ? { devCode: challenge.devCode } : {}),
+    });
   } catch (error) {
-    console.error("Customer register error:", error);
-    return NextResponse.json({ error: "Erreur lors de la création du compte" }, { status: 500 });
+    const response = otpErrorResponseMessage(error);
+    console.error("Customer registration OTP request error:", error);
+    return NextResponse.json(response, { status: response.status });
   }
 }
