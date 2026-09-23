@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isUnauthorized, requireCustomerAuth } from "@/lib/customer-auth";
+import { phoneLookupCandidates } from "@/lib/customer-otp";
 
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireCustomerAuth(req);
+    const phones = phoneLookupCandidates(auth.phone);
 
     const orders = await prisma.order.findMany({
       where: {
         OR: [
           { customerId: auth.id },
-          { customerPhone: auth.phone },
-          { customer: { phone: auth.phone } },
+          { customerPhone: { in: phones } },
+          { customer: { phone: { in: phones } } },
         ],
       },
-      include: {
-        items: true,
-      },
+      include: { items: true },
       orderBy: { createdAt: "desc" },
     });
 
