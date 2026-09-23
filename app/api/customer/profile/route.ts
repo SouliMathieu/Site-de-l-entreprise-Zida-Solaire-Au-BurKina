@@ -33,13 +33,24 @@ export async function PATCH(req: NextRequest) {
     const auth = await requireCustomerAuth(req);
     const { firstName, lastName, email, phone, address, city } = await req.json();
 
+    const currentCustomer = await prisma.customer.findUnique({ where: { id: auth.id } });
+    if (!currentCustomer) {
+      return NextResponse.json({ error: "Client non trouvé" }, { status: 404 });
+    }
+
+    if (phone && phone !== currentCustomer.phone) {
+      return NextResponse.json(
+        { error: "Le changement de numéro nécessite une vérification OTP dédiée." },
+        { status: 409 }
+      );
+    }
+
     const customer = await prisma.customer.update({
       where: { id: auth.id },
       data: {
         ...(firstName && { firstName }),
         ...(lastName !== undefined && { lastName }),
         ...(email !== undefined && { email: email || null }),
-        ...(phone && { phone }),
         ...(address !== undefined && { address }),
         ...(city && { city }),
       },
