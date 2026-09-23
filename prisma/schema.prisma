@@ -49,6 +49,21 @@ model Customer {
   @@map("customers")
 }
 
+model CustomerOtpChallenge {
+  id         String    @id @default(cuid())
+  phone      String
+  purpose    String    @default("login")
+  codeHash   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+  @@index([expiresAt])
+  @@map("customer_otp_challenges")
+}
+
 // ============================================
 // CATÉGORIES
 // ============================================
@@ -214,6 +229,7 @@ model InstallationRequest {
   @@index([requestNumber])
   @@map("installation_requests")
 }
+
 // ============================================
 // DEMANDES DE DÉPANNAGE
 // ============================================
@@ -234,6 +250,7 @@ model RepairRequest {
   @@index([createdAt])
   @@map("repair_requests")
 }
+
 enum InstallationType {
   SOLAR
   ELECTRICAL
@@ -258,7 +275,7 @@ model ContactMessage {
   phone     String
   subject   String
   message   String   @db.Text
-  status    String   @default("NEW") // NEW, READ, REPLIED
+  status    String   @default("NEW")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
