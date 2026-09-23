@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isUnauthorized, requireCustomerAuth } from "@/lib/customer-auth";
+import { phoneLookupCandidates } from "@/lib/customer-otp";
 
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireCustomerAuth(req);
+    const phones = phoneLookupCandidates(auth.phone);
 
     const installations = await prisma.installationRequest.findMany({
-      where: { customerPhone: auth.phone },
+      where: { customerPhone: { in: phones } },
       orderBy: { createdAt: "desc" },
     });
 
