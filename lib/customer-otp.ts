@@ -6,6 +6,13 @@ const OTP_RESEND_DELAY_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 export type CustomerOtpPurpose = "login" | "register" | "phone_change";
 
+type OrangeTokenCache = {
+  accessToken: string;
+  expiresAt: number;
+};
+
+let orangeTokenCache: OrangeTokenCache | null = null;
+
 function getSecret() {
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) throw new Error("NEXTAUTH_SECRET is not configured");
@@ -36,16 +43,78 @@ function hashCode(challengeId: string, phone: string, code: string) {
     .digest("hex");
 }
 
-async function sendOtpSms(phone: string, code: string) {
-  const message = `ZIDA SOLAIRE : votre code de vérification est ${code}. Il expire dans 5 minutes.`;
-  const webhookUrl = process.env.SMS_OTP_WEBHOOK_URL;
-
-  if (!webhookUrl) {
-    if (process.env.NODE_ENV !== "production") {
-      return { delivered: false, devCode: code };
-    }
-    throw new Error("OTP_PROVIDER_NOT_CONFIGURED");
+async function getOrangeAccessToken(forceRefresh = false) {
+  if (!forceRefresh && orangeTokenCache && orangeTokenCache.expiresAt > Date.now()) {
+    return orangeTokenCache.accessToken;
   }
+
+  const clientId = process.env.ORANGE_SMS_CLIENT_ID;
+  const clientSecret = process.env.ORANGE_SMS_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error("OTP_PROVIDER_NOT_CONFIGURED");
+
+  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const response = await fetch("https://api.orange.com/oauth/v3/token", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: "grant_type=client_credentials",
+  });
+
+  if (!response.ok) throw new Error("OTP_DELIVERY_FAILED");
+  const body = (await response.json()) as {
+    access_token?: string;
+    expires_in?: number;
+  };
+
+  if (!body.access_token) throw new Error("OTP_DELIVERY_FAILED");
+  const expiresIn = Number(body.expires_in || 3600);
+  orangeTokenCache = {
+    accessToken: body.access_token,
+    expiresAt: Date.now() + Math.max(60, expiresIn - 60) * 1000,
+  };
+  return body.access_token;
+}
+
+async function sendOrangeSms(phone: string, message: string, retry = true): Promise<void> {
+  const token = await getOrangeAccessToken();
+  const senderDigits = (process.env.ORANGE_SMS_SENDER_NUMBER || "2260000").replace(/\D/g, "");
+  const senderAddress = `tel:+${senderDigits}`;
+  const senderName = process.env.ORANGE_SMS_SENDER_NAME?.trim();
+
+  const response = await fetch(
+    `https://api.orange.com/smsmessaging/v1/outbound/${encodeURIComponent(senderAddress)}/requests`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        outboundSMSMessageRequest: {
+          address: `tel:${phone}`,
+          senderAddress,
+          ...(senderName ? { senderName } : {}),
+          outboundSMSTextMessage: { message },
+        },
+      }),
+    }
+  );
+
+  if (response.status === 401 && retry) {
+    orangeTokenCache = null;
+    await getOrangeAccessToken(true);
+    return sendOrangeSms(phone, message, false);
+  }
+
+  if (!response.ok) throw new Error("OTP_DELIVERY_FAILED");
+}
+
+async function sendWebhookSms(phone: string, code: string, message: string) {
+  const webhookUrl = process.env.SMS_OTP_WEBHOOK_URL;
+  if (!webhookUrl) throw new Error("OTP_PROVIDER_NOT_CONFIGURED");
 
   const response = await fetch(webhookUrl, {
     method: "POST",
@@ -59,7 +128,34 @@ async function sendOtpSms(phone: string, code: string) {
   });
 
   if (!response.ok) throw new Error("OTP_DELIVERY_FAILED");
-  return { delivered: true };
+}
+
+async function sendOtpSms(phone: string, code: string) {
+  const message = `ZIDA SOLAIRE : votre code de vérification est ${code}. Il expire dans 5 minutes.`;
+  const configuredProvider = process.env.SMS_OTP_PROVIDER?.toLowerCase();
+  const provider =
+    configuredProvider ||
+    (process.env.ORANGE_SMS_CLIENT_ID && process.env.ORANGE_SMS_CLIENT_SECRET
+      ? "orange"
+      : process.env.SMS_OTP_WEBHOOK_URL
+        ? "webhook"
+        : "dev");
+
+  if (provider === "orange") {
+    await sendOrangeSms(phone, message);
+    return { delivered: true };
+  }
+
+  if (provider === "webhook") {
+    await sendWebhookSms(phone, code, message);
+    return { delivered: true };
+  }
+
+  if (provider === "dev" && process.env.NODE_ENV !== "production") {
+    return { delivered: false, devCode: code };
+  }
+
+  throw new Error("OTP_PROVIDER_NOT_CONFIGURED");
 }
 
 export async function createOtpChallenge(rawPhone: string, purpose: CustomerOtpPurpose) {
