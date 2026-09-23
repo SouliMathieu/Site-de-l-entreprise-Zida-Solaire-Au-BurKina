@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { normalizePhone, phoneLookupCandidates } from "@/lib/customer-otp";
+import { createCustomerNotification } from "@/lib/customer-notifications";
 
 function generateOrderNumber() {
   const now = new Date();
@@ -46,20 +47,14 @@ export async function POST(request: Request) {
     };
 
     if (!customer || !customer.phone || !items || items.length === 0) {
-      return NextResponse.json(
-        { error: "Données invalides" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Données invalides" }, { status: 400 });
     }
 
     let normalizedPhone: string;
     try {
       normalizedPhone = normalizePhone(customer.phone);
     } catch {
-      return NextResponse.json(
-        { error: "Numéro de téléphone invalide" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Numéro de téléphone invalide" }, { status: 400 });
     }
 
     const existingCustomer = await prisma.customer.findFirst({
@@ -81,7 +76,6 @@ export async function POST(request: Request) {
       }));
 
     const orderNumber = generateOrderNumber();
-
     const order = await prisma.order.create({
       data: {
         orderNumber,
@@ -110,15 +104,24 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(
-      { orderNumber: order.orderNumber },
-      { status: 201 }
-    );
+    try {
+      await createCustomerNotification({
+        customerId: customerRecord.id,
+        phone: normalizedPhone,
+        type: "order",
+        title: "Commande reçue",
+        message: `Votre commande ${order.orderNumber} a bien été reçue par ZIDA SOLAIRE.`,
+        entityType: "order",
+        entityId: order.id,
+        route: "OrdersArea",
+      });
+    } catch (notificationError) {
+      console.error("Order notification error:", notificationError);
+    }
+
+    return NextResponse.json({ orderNumber: order.orderNumber }, { status: 201 });
   } catch (error) {
     console.error("Erreur API checkout", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
