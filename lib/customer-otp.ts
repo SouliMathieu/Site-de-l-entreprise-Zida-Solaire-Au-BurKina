@@ -22,6 +22,13 @@ export function normalizePhone(value: string) {
   throw new Error("INVALID_PHONE");
 }
 
+export function phoneLookupCandidates(value: string) {
+  const normalized = normalizePhone(value);
+  const digits = normalized.replace(/\D/g, "");
+  const local = digits.startsWith("226") ? digits.slice(3) : digits;
+  return Array.from(new Set([value.trim(), normalized, digits, local]));
+}
+
 function hashCode(challengeId: string, phone: string, code: string) {
   return createHash("sha256")
     .update(`${challengeId}:${phone}:${code}:${getSecret()}`)
