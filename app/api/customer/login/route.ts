@@ -1,43 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { SignJWT } from "jose";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "your-secret-key-change-this"
-);
+import { signCustomerToken } from "@/lib/customer-auth";
 
 export async function POST(req: NextRequest) {
   try {
     const { phone } = await req.json();
 
     if (!phone) {
-      return NextResponse.json(
-        { error: "Numéro de téléphone requis" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Numéro de téléphone requis" }, { status: 400 });
     }
 
-    // Chercher le customer par téléphone
-    const customer = await prisma.customer.findFirst({
-      where: { phone },
-    });
-
+    const customer = await prisma.customer.findFirst({ where: { phone } });
     if (!customer) {
-      return NextResponse.json(
-        { error: "Aucun compte trouvé avec ce numéro" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Aucun compte trouvé avec ce numéro" }, { status: 404 });
     }
 
-    // Créer un JWT
-    const token = await new SignJWT({
-      id: customer.id,
-      phone: customer.phone,
-      type: "customer",
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("30d")
-      .sign(JWT_SECRET);
+    const token = await signCustomerToken(customer);
 
     return NextResponse.json({
       user: {
@@ -52,9 +30,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Customer login error:", error);
-    return NextResponse.json(
-      { error: "Erreur de connexion" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erreur de connexion" }, { status: 500 });
   }
 }
