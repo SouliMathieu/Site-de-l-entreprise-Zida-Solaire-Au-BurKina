@@ -6,6 +6,7 @@ import {
   PaymentStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { normalizePhone, phoneLookupCandidates } from "@/lib/customer-otp";
 
 function generateOrderNumber() {
   const now = new Date();
@@ -44,15 +45,26 @@ export async function POST(request: Request) {
       total: number;
     };
 
-    if (!customer || !items || items.length === 0) {
+    if (!customer || !customer.phone || !items || items.length === 0) {
       return NextResponse.json(
         { error: "Données invalides" },
         { status: 400 }
       );
     }
 
+    let normalizedPhone: string;
+    try {
+      normalizedPhone = normalizePhone(customer.phone);
+    } catch {
+      return NextResponse.json(
+        { error: "Numéro de téléphone invalide" },
+        { status: 400 }
+      );
+    }
+
     const existingCustomer = await prisma.customer.findFirst({
-      where: { phone: customer.phone },
+      where: { phone: { in: phoneLookupCandidates(customer.phone) } },
+      orderBy: { createdAt: "asc" },
     });
 
     const customerRecord =
@@ -62,7 +74,7 @@ export async function POST(request: Request) {
           firstName: customer.firstName,
           lastName: customer.lastName,
           email: customer.email || null,
-          phone: customer.phone,
+          phone: normalizedPhone,
           address: customer.address,
           city: customer.city || "Ouagadougou",
         },
@@ -82,7 +94,7 @@ export async function POST(request: Request) {
         total,
         deliveryAddress: customer.address,
         deliveryCity: customer.city || "Ouagadougou",
-        customerPhone: customer.phone,
+        customerPhone: normalizedPhone,
         customerEmail: customer.email || null,
         customerNotes: customer.notes || null,
         items: {
