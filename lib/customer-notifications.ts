@@ -3,6 +3,74 @@ import { phoneLookupCandidates } from "@/lib/customer-otp";
 
 export type CustomerNotificationType = "order" | "installation" | "sav" | "system";
 
+type PushTarget = {
+  id: string;
+  token: string;
+};
+
+async function sendExpoPush(params: {
+  customerId: string;
+  title: string;
+  message: string;
+  route?: string;
+  entityType?: string;
+  entityId?: string;
+}) {
+  const tokens: PushTarget[] = await prisma.customerPushToken.findMany({
+    where: { customerId: params.customerId, active: true },
+    select: { id: true, token: true },
+  });
+
+  if (tokens.length === 0) return;
+
+  try {
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Accept-Encoding": "gzip, deflate",
+      },
+      body: JSON.stringify(
+        tokens.map((item) => ({
+          to: item.token,
+          sound: "default",
+          title: params.title,
+          body: params.message,
+          channelId: "zida-updates",
+          data: {
+            route: params.route,
+            entityType: params.entityType,
+            entityId: params.entityId,
+          },
+        }))
+      ),
+    });
+
+    if (!response.ok) {
+      console.error("Expo push request failed:", response.status, await response.text());
+      return;
+    }
+
+    const payload = (await response.json()) as {
+      data?: Array<{ status?: string; details?: { error?: string } }>;
+    };
+
+    const invalidIds = tokens
+      .filter((_, index) => payload.data?.[index]?.details?.error === "DeviceNotRegistered")
+      .map((item) => item.id);
+
+    if (invalidIds.length > 0) {
+      await prisma.customerPushToken.updateMany({
+        where: { id: { in: invalidIds } },
+        data: { active: false, revokedAt: new Date() },
+      });
+    }
+  } catch (error) {
+    console.error("Expo push delivery error:", error);
+  }
+}
+
 export async function createCustomerNotification(input: {
   customerId?: string | null;
   phone: string;
@@ -25,7 +93,7 @@ export async function createCustomerNotification(input: {
   if (input.type === "installation" && preferences?.installationUpdates === false) return null;
   if (input.type === "sav" && preferences?.savUpdates === false) return null;
 
-  return prisma.customerNotification.create({
+  const notification = await prisma.customerNotification.create({
     data: {
       customerId: customer?.id ?? input.customerId ?? null,
       phone: customer?.phone ?? input.phone,
@@ -37,6 +105,19 @@ export async function createCustomerNotification(input: {
       route: input.route,
     },
   });
+
+  if (customer && preferences?.pushEnabled === true) {
+    void sendExpoPush({
+      customerId: customer.id,
+      title: input.title,
+      message: input.message,
+      route: input.route,
+      entityType: input.entityType,
+      entityId: input.entityId,
+    });
+  }
+
+  return notification;
 }
 
 export const ORDER_STATUS_COPY: Record<string, { title: string; message: (ref: string) => string }> = {
