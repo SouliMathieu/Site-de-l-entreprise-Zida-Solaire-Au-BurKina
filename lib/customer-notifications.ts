@@ -107,7 +107,7 @@ export async function createCustomerNotification(input: {
   });
 
   if (customer && preferences?.pushEnabled === true) {
-    void sendExpoPush({
+    await sendExpoPush({
       customerId: customer.id,
       title: input.title,
       message: input.message,
