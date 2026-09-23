@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminUnauthorized, requireAdminAuth } from "@/lib/admin-auth";
+import { createCustomerNotification, ORDER_STATUS_COPY } from "@/lib/customer-notifications";
 
 const ALLOWED_STATUSES = [
   "PENDING",
@@ -27,6 +28,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Statut invalide." }, { status: 400 });
     }
 
+    const current = await prisma.order.findUnique({ where: { id } });
+    if (!current) return NextResponse.json({ error: "Commande introuvable." }, { status: 404 });
+
     const order = await prisma.order.update({
       where: { id },
       data: {
@@ -34,6 +38,22 @@ export async function PATCH(
         ...(body.status === "DELIVERED" && { deliveredAt: new Date() }),
       },
     });
+
+    if (current.status !== body.status) {
+      const copy = ORDER_STATUS_COPY[body.status];
+      if (copy) {
+        await createCustomerNotification({
+          customerId: order.customerId,
+          phone: order.customerPhone,
+          type: "order",
+          title: copy.title,
+          message: copy.message(order.orderNumber),
+          entityType: "order",
+          entityId: order.id,
+          route: "OrdersArea",
+        });
+      }
+    }
 
     return NextResponse.json(order, { status: 200 });
   } catch (error) {
