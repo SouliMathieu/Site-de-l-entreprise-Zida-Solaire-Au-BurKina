@@ -17,12 +17,64 @@ interface Props {
 
 type Status = "idle" | "submitting" | "success" | "error";
 
+type SolarSpecifications = Record<string, unknown>;
+
+function getSolarSpecifications(value: unknown): SolarSpecifications {
+  if (
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  ) {
+    return value as SolarSpecifications;
+  }
+
+  return {};
+}
+
+function buildSolarSpecifications(
+  formData: FormData,
+  existing: SolarSpecifications = {}
+): SolarSpecifications {
+  const specifications: SolarSpecifications = { ...existing };
+
+  const fields = {
+    panelPowerW: "panelPowerW",
+    solarPowerKw: "solarPowerKw",
+    batteryCapacityKwh: "batteryCapacityKwh",
+    inverterPowerKw: "inverterPowerKw",
+    inverterSurgePowerKw: "inverterSurgePowerKw",
+  };
+
+  for (const [key, fieldName] of Object.entries(fields)) {
+    const raw = formData.get(fieldName);
+
+    if (raw === null || String(raw).trim() === "") {
+      delete specifications[key];
+      continue;
+    }
+
+    const value = Number(raw);
+
+    if (Number.isFinite(value)) {
+      specifications[key] = value;
+    }
+  }
+
+  return specifications;
+}
+
+
+
 export function EditProductFormClient({ product, categories }: Props) {
   const router = useRouter();
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>(
     (product.images as string[]) || []
+  );
+
+  const solarSpecifications = getSolarSpecifications(
+    product.specifications
   );
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -50,6 +102,10 @@ export function EditProductFormClient({ product, categories }: Props) {
         : null,
       isActive: formData.get("isActive") === "on",
       isFeatured: formData.get("isFeatured") === "on",
+      specifications: buildSolarSpecifications(
+        formData,
+        solarSpecifications
+      ),
       images: images,
     };
 
@@ -272,6 +328,93 @@ export function EditProductFormClient({ product, categories }: Props) {
               className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
             />
           </div>
+        </div>
+      </div>
+
+
+      {/* Caractéristiques techniques solaires */}
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h2 className="mb-2 text-lg font-semibold text-slate-900">
+          Caractéristiques techniques solaires
+        </h2>
+
+        <p className="mb-4 text-sm text-slate-500">
+          Ces informations permettent au simulateur solaire de sélectionner
+          automatiquement les produits adaptés.
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-2">
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance panneau (W)
+            </label>
+            <input
+              type="number"
+              name="panelPowerW"
+              step="1"
+              defaultValue={String(solarSpecifications.panelPowerW ?? "")}
+              placeholder="Ex. 595"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance photovoltaïque du kit (kWc)
+            </label>
+            <input
+              type="number"
+              name="solarPowerKw"
+              step="0.01"
+              defaultValue={String(solarSpecifications.solarPowerKw ?? "")}
+              placeholder="Ex. 5.95"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Capacité batterie (kWh)
+            </label>
+            <input
+              type="number"
+              name="batteryCapacityKwh"
+              step="0.01"
+              defaultValue={String(solarSpecifications.batteryCapacityKwh ?? "")}
+              placeholder="Ex. 15"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance nominale onduleur (kW)
+            </label>
+            <input
+              type="number"
+              name="inverterPowerKw"
+              step="0.01"
+              defaultValue={String(solarSpecifications.inverterPowerKw ?? "")}
+              placeholder="Ex. 5"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance de surcharge onduleur (kW)
+            </label>
+            <input
+              type="number"
+              name="inverterSurgePowerKw"
+              step="0.01"
+              defaultValue={String(solarSpecifications.inverterSurgePowerKw ?? "")}
+              placeholder="Ex. 10"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
         </div>
       </div>
 

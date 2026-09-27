@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
   try {
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
     const take = parseInt(searchParams.get("take") || "20");
 
     // Construire le filtre
-    const where: any = {
+    const where: Prisma.ProductWhereInput = {
       isActive: true,
     };
 
@@ -51,7 +52,9 @@ export async function GET(req: Request) {
       compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
       images: p.images,
       shortDescription: p.shortDescription,
+      description: p.description,
       stock: p.stock,
+      specifications: p.specifications,
       category: p.category
         ? { id: p.category.id, name: p.category.name, slug: p.category.slug }
         : null,

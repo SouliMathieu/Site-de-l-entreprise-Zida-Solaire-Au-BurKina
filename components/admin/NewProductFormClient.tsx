@@ -14,6 +14,38 @@ interface Props {
 
 type Status = "idle" | "submitting" | "success" | "error";
 
+type SolarSpecifications = Record<string, unknown>;
+
+function buildSolarSpecifications(formData: FormData): SolarSpecifications {
+  const specifications: SolarSpecifications = {};
+
+  const fields = {
+    panelPowerW: "panelPowerW",
+    solarPowerKw: "solarPowerKw",
+    batteryCapacityKwh: "batteryCapacityKwh",
+    inverterPowerKw: "inverterPowerKw",
+    inverterSurgePowerKw: "inverterSurgePowerKw",
+  };
+
+  for (const [key, fieldName] of Object.entries(fields)) {
+    const raw = formData.get(fieldName);
+
+    if (raw === null || String(raw).trim() === "") {
+      continue;
+    }
+
+    const value = Number(raw);
+
+    if (Number.isFinite(value)) {
+      specifications[key] = value;
+    }
+  }
+
+  return specifications;
+}
+
+
+
 export function NewProductFormClient({ categories }: Props) {
   const router = useRouter();
   const [status, setStatus] = useState<Status>("idle");
@@ -45,6 +77,7 @@ export function NewProductFormClient({ categories }: Props) {
         : null,
       isActive: formData.get("isActive") === "on",
       isFeatured: formData.get("isFeatured") === "on",
+      specifications: buildSolarSpecifications(formData),
       images: images,
     };
 
@@ -241,6 +274,88 @@ export function NewProductFormClient({ categories }: Props) {
               className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
             />
           </div>
+        </div>
+      </div>
+
+
+      {/* Caractéristiques techniques solaires */}
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h2 className="mb-2 text-lg font-semibold text-slate-900">
+          Caractéristiques techniques solaires
+        </h2>
+
+        <p className="mb-4 text-sm text-slate-500">
+          Ces informations permettent au simulateur solaire de sélectionner
+          automatiquement les produits adaptés.
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-2">
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance panneau (W)
+            </label>
+            <input
+              type="number"
+              name="panelPowerW"
+              step="1"
+              placeholder="Ex. 595"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance photovoltaïque du kit (kWc)
+            </label>
+            <input
+              type="number"
+              name="solarPowerKw"
+              step="0.01"
+              placeholder="Ex. 5.95"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Capacité batterie (kWh)
+            </label>
+            <input
+              type="number"
+              name="batteryCapacityKwh"
+              step="0.01"
+              placeholder="Ex. 15"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance nominale onduleur (kW)
+            </label>
+            <input
+              type="number"
+              name="inverterPowerKw"
+              step="0.01"
+              placeholder="Ex. 5"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Puissance de surcharge onduleur (kW)
+            </label>
+            <input
+              type="number"
+              name="inverterSurgePowerKw"
+              step="0.01"
+              placeholder="Ex. 10"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
+            />
+          </div>
+
         </div>
       </div>
 
