@@ -1,6 +1,7 @@
 // app/api/admin/products/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 // Génère un SKU lisible et garanti unique en base, ex: PANEL-A3F9K2
 async function generateUniqueSku(name: string): Promise<string> {
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
       warranty,
       weight,
       images,
+      specifications,
       isActive,
       isFeatured,
     } = body as {
@@ -60,6 +62,7 @@ export async function POST(request: Request) {
       warranty?: string | null;
       weight?: number | null;
       images?: string[];
+      specifications?: Prisma.InputJsonObject;
       isActive?: boolean;
       isFeatured?: boolean;
     };
@@ -98,6 +101,7 @@ export async function POST(request: Request) {
         warranty: warranty || null,
         weight: weight || null,
         images: images || [],
+        specifications: specifications ?? {},
         isActive: isActive ?? true,
         isFeatured: isFeatured ?? false,
       },
