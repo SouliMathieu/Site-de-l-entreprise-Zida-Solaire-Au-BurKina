@@ -72,6 +72,38 @@ export function phoneLookupCandidates(value: string) {
   );
 }
 
+export async function findCustomerByPhone(value: string) {
+  const customers =
+    await prisma.customer.findMany({
+      where: {
+        phone: {
+          in: phoneLookupCandidates(value),
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+  if (customers.length === 0) {
+    return null;
+  }
+
+  // Compatibilité avec d'anciens doublons :
+  // privilégier la fiche qui possède déjà un PIN,
+  // puis celle dont l'email est vérifié.
+  return (
+    customers.find(
+      (customer) => Boolean(customer.pinHash)
+    ) ??
+    customers.find(
+      (customer) =>
+        Boolean(customer.emailVerifiedAt)
+    ) ??
+    customers[0]
+  );
+}
+
 export function normalizeEmail(value: string) {
   const email = String(value || "").trim().toLowerCase();
 

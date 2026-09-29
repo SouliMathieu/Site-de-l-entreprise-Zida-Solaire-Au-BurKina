@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  findCustomerByPhone,
+  normalizePhone,
+} from "@/lib/customer-pin-auth";
 import { jwtVerify } from "jose";
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -52,13 +56,51 @@ export async function PATCH(req: NextRequest) {
 
     const { firstName, lastName, email, phone, address, city } = await req.json();
 
+    let normalizedPhone:
+      | string
+      | undefined;
+
+    if (phone) {
+      try {
+        normalizedPhone =
+          normalizePhone(phone);
+      } catch {
+        return NextResponse.json(
+          {
+            error:
+              "Numéro de téléphone invalide",
+          },
+          { status: 400 }
+        );
+      }
+
+      const existing =
+        await findCustomerByPhone(
+          normalizedPhone
+        );
+
+      if (
+        existing &&
+        existing.id !==
+          String(payload.id)
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Ce numéro est déjà utilisé par un autre compte",
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const customer = await prisma.customer.update({
       where: { id: payload.id as string },
       data: {
         ...(firstName && { firstName }),
         ...(lastName && { lastName }),
         ...(email !== undefined && { email: email || null }),
-        ...(phone && { phone }),
+        ...(normalizedPhone && { phone: normalizedPhone }),
         ...(address !== undefined && { address }),
         ...(city && { city }),
       },

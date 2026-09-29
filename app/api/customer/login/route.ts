@@ -5,7 +5,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import {
   customerPublicData,
-  phoneLookupCandidates,
+  findCustomerByPhone,
   PIN_SECURITY,
   pinAuthErrorResponse,
   signCustomerToken,
@@ -33,15 +33,7 @@ export async function POST(
     const validPin = validatePin(pin);
 
     const customer =
-      await prisma.customer.findFirst({
-        where: {
-          phone: {
-            in: phoneLookupCandidates(
-              phone
-            ),
-          },
-        },
-      });
+      await findCustomerByPhone(phone);
 
     // Réponse volontairement générique.
     if (!customer) {

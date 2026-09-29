@@ -8,8 +8,8 @@ import {
 import { prisma } from "@/lib/prisma";
 import {
   createEmailChallenge,
+  findCustomerByPhone,
   normalizeEmail,
-  phoneLookupCandidates,
   pinAuthErrorResponse,
 } from "@/lib/customer-pin-auth";
 
@@ -58,15 +58,7 @@ export async function POST(
     } else {
       try {
         customer =
-          await prisma.customer.findFirst({
-            where: {
-              phone: {
-                in: phoneLookupCandidates(
-                  value
-                ),
-              },
-            },
-          });
+          await findCustomerByPhone(value);
       } catch {
         customer = null;
       }

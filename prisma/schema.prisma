@@ -38,7 +38,7 @@ model Customer {
   firstName         String
   lastName          String
   email             String?
-  phone             String
+  phone             String    @unique
   pinHash           String?
   pinFailedAttempts Int       @default(0)
   pinLockedUntil    DateTime?

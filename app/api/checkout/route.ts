@@ -6,6 +6,10 @@ import {
   PaymentStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  findCustomerByPhone,
+  normalizePhone,
+} from "@/lib/customer-pin-auth";
 
 function generateOrderNumber() {
   const now = new Date();
@@ -51,9 +55,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingCustomer = await prisma.customer.findFirst({
-      where: { phone: customer.phone },
-    });
+    const normalizedPhone =
+      normalizePhone(customer.phone);
+
+    const existingCustomer =
+      await findCustomerByPhone(
+        normalizedPhone
+      );
 
     const customerRecord =
       existingCustomer ??
@@ -62,9 +70,11 @@ export async function POST(request: Request) {
           firstName: customer.firstName,
           lastName: customer.lastName,
           email: customer.email || null,
-          phone: customer.phone,
+          phone: normalizedPhone,
           address: customer.address,
-          city: customer.city || "Ouagadougou",
+          city:
+            customer.city ||
+            "Ouagadougou",
         },
       }));
 
@@ -82,7 +92,7 @@ export async function POST(request: Request) {
         total,
         deliveryAddress: customer.address,
         deliveryCity: customer.city || "Ouagadougou",
-        customerPhone: customer.phone,
+        customerPhone: normalizedPhone,
         customerEmail: customer.email || null,
         customerNotes: customer.notes || null,
         items: {

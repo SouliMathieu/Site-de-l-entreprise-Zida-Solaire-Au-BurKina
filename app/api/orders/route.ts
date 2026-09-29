@@ -2,6 +2,10 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  findCustomerByPhone,
+  normalizePhone,
+} from "@/lib/customer-pin-auth";
 import { resend } from "@/lib/resend";
 import { OrderConfirmationEmail } from "@/emails/OrderConfirmation";
 import { NewOrderAdminEmail } from "@/emails/NewOrderAdmin";
@@ -51,17 +55,30 @@ export async function POST(req: Request) {
       );
     }
 
-    // Création du customer
-    const customer = await prisma.customer.create({
-      data: {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        email: body.email,
-        phone: body.phone,
-        address: body.address,
-        city: body.city || "Ouagadougou",
-      },
-    });
+    const normalizedPhone =
+      normalizePhone(body.phone);
+
+    // Réutiliser le même client quelle que soit
+    // l'écriture du numéro burkinabè.
+    const existingCustomer =
+      await findCustomerByPhone(
+        normalizedPhone
+      );
+
+    const customer =
+      existingCustomer ??
+      (await prisma.customer.create({
+        data: {
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
+          phone: normalizedPhone,
+          address: body.address,
+          city:
+            body.city ||
+            "Ouagadougou",
+        },
+      }));
 
     const orderNumber = generateOrderNumber();
 
@@ -78,7 +95,7 @@ export async function POST(req: Request) {
         total: body.totals.total,
         deliveryAddress: body.address,
         deliveryCity: body.city || "Ouagadougou",
-        customerPhone: body.phone,
+        customerPhone: normalizedPhone,
         customerEmail: body.email,
         customerNotes: body.notes || "",
         items: {
@@ -131,7 +148,7 @@ export async function POST(req: Request) {
           orderNumber,
           customerName: `${body.firstName} ${body.lastName}`,
           customerEmail: body.email,
-          customerPhone: body.phone,
+          customerPhone: normalizedPhone,
           items: body.items.map((item) => ({
             name: item.name,
             quantity: item.quantity,
