@@ -83,6 +83,7 @@ export async function POST(
         message:
           "Si un compte correspond à ces informations, un code a été envoyé à l'adresse email enregistrée.",
         resetId: randomUUID(),
+        expiresIn: 600,
       });
     }
 
@@ -102,10 +103,7 @@ export async function POST(
         "Si un compte correspond à ces informations, un code a été envoyé à l'adresse email enregistrée.",
       resetId:
         challenge.challengeId,
-      email:
-        challenge.maskedEmail,
-      expiresIn:
-        challenge.expiresIn,
+      expiresIn: 600,
       ...(challenge.devCode
         ? {
             devCode:
