@@ -18,25 +18,8 @@ SET "phone" =
     ELSE btrim("phone")
   END;
 
--- 1b. Normaliser aussi les références téléphoniques
--- conservées dans les anciens challenges OTP/email.
-UPDATE "customer_otp_challenges"
-SET "phone" =
-  CASE
-    WHEN length(regexp_replace("phone", '[^0-9]', '', 'g')) = 8
-      THEN '+226' || regexp_replace("phone", '[^0-9]', '', 'g')
-
-    WHEN regexp_replace("phone", '[^0-9]', '', 'g') LIKE '226%'
-      AND length(regexp_replace("phone", '[^0-9]', '', 'g')) = 11
-      THEN '+' || regexp_replace("phone", '[^0-9]', '', 'g')
-
-    WHEN btrim("phone") LIKE '+%'
-      AND length(regexp_replace("phone", '[^0-9]', '', 'g')) BETWEEN 8 AND 15
-      THEN '+' || regexp_replace("phone", '[^0-9]', '', 'g')
-
-    ELSE btrim("phone")
-  END;
-
+-- 1b. Normaliser les références téléphoniques
+-- conservées dans les challenges email.
 UPDATE "customer_email_challenges"
 SET "phone" =
   CASE
