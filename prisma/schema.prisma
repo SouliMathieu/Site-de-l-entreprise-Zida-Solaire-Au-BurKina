@@ -34,24 +34,61 @@ enum UserRole {
 // CLIENTS
 // ============================================
 model Customer {
-  id        String   @id @default(uuid())
-  firstName String
-  lastName  String
-  email     String?
-  phone     String
-  address   String?
-  city      String   @default("Ouagadougou")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(uuid())
+  firstName         String
+  lastName          String
+  email             String?
+  phone             String
+  pinHash           String?
+  pinFailedAttempts Int       @default(0)
+  pinLockedUntil    DateTime?
+  emailVerifiedAt   DateTime?
+  address           String?
+  city              String    @default("Ouagadougou")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   orders Order[]
 
   @@map("customers")
 }
 
+model CustomerEmailChallenge {
+  id         String    @id @default(cuid())
+  purpose    String
+  email      String
+  phone      String?
+  codeHash   String
+  payload    Json?
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email, purpose, createdAt])
+  @@index([expiresAt])
+  @@map("customer_email_challenges")
+}
+
 // ============================================
 // CATÉGORIES
 // ============================================
+
+model CustomerOtpChallenge {
+  id         String    @id @default(cuid())
+  phone      String
+  purpose    String    @default("login")
+  codeHash   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+  @@index([expiresAt])
+  @@map("customer_otp_challenges")
+}
+
 model Category {
   id          String   @id @default(uuid())
   name        String
@@ -188,25 +225,25 @@ model OrderItem {
 // DEMANDES D'INSTALLATION
 // ============================================
 model InstallationRequest {
-  id                    String              @id @default(uuid())
-  requestNumber         String              @unique
-  customerName          String
-  customerPhone         String
-  customerEmail         String?
-  customerAddress       String
-  installationType      InstallationType
-  description           String              @db.Text
-  preferredDate         DateTime?
-  preferredTime         String?
-  images                Json                @default("[]")
-  status                InstallationStatus  @default(NEW)
-  estimatedCost         Decimal?            @db.Decimal(12, 2)
-  assignedTechnicianId  String?
-  technicianNotes       String?             @db.Text
-  appointmentDate       DateTime?
-  completedAt           DateTime?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  id                   String             @id @default(uuid())
+  requestNumber        String             @unique
+  customerName         String
+  customerPhone        String
+  customerEmail        String?
+  customerAddress      String
+  installationType     InstallationType
+  description          String             @db.Text
+  preferredDate        DateTime?
+  preferredTime        String?
+  images               Json               @default("[]")
+  status               InstallationStatus @default(NEW)
+  estimatedCost        Decimal?           @db.Decimal(12, 2)
+  assignedTechnicianId String?
+  technicianNotes      String?            @db.Text
+  appointmentDate      DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   assignedTechnician User? @relation(fields: [assignedTechnicianId], references: [id], onDelete: SetNull)
 
@@ -214,26 +251,28 @@ model InstallationRequest {
   @@index([requestNumber])
   @@map("installation_requests")
 }
+
 // ============================================
 // DEMANDES DE DÉPANNAGE
 // ============================================
 model RepairRequest {
-  id                  String   @id @default(cuid())
-  name                String
-  phone               String
-  address             String?
-  installationType    String?
-  problemDescription  String   @db.Text
-  urgency             String   @default("normal")
-  installedByZida     Boolean  @default(false)
-  status              String   @default("pending")
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  name               String
+  phone              String
+  address            String?
+  installationType   String?
+  problemDescription String   @db.Text
+  urgency            String   @default("normal")
+  installedByZida    Boolean  @default(false)
+  status             String   @default("pending")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([status])
   @@index([createdAt])
   @@map("repair_requests")
 }
+
 enum InstallationType {
   SOLAR
   ELECTRICAL
@@ -269,21 +308,21 @@ model ContactMessage {
 // CONFIGURATION SITE
 // ============================================
 model SiteSettings {
-  id                      String   @id @default(uuid())
-  siteName                String   @default("ZIDA SOLAIRE")
-  siteDescription         String?  @db.Text
-  contactEmail            String
-  contactPhone            String
-  whatsappNumber          String
-  address                 String?
-  openingHours            Json     @default("{}")
-  deliveryFeeOuagadougou  Decimal  @db.Decimal(8, 2) @default(2000)
-  deliveryFeeOtherCities  Decimal  @db.Decimal(8, 2) @default(5000)
-  freeDeliveryThreshold   Decimal  @db.Decimal(12, 2) @default(50000)
-  banners                 Json     @default("[]")
-  socialMedia             Json     @default("{}")
-  maintenanceMode         Boolean  @default(false)
-  updatedAt               DateTime @updatedAt
+  id                     String   @id @default(uuid())
+  siteName               String   @default("ZIDA SOLAIRE")
+  siteDescription        String?  @db.Text
+  contactEmail           String
+  contactPhone           String
+  whatsappNumber         String
+  address                String?
+  openingHours           Json     @default("{}")
+  deliveryFeeOuagadougou Decimal  @default(2000) @db.Decimal(8, 2)
+  deliveryFeeOtherCities Decimal  @default(5000) @db.Decimal(8, 2)
+  freeDeliveryThreshold  Decimal  @default(50000) @db.Decimal(12, 2)
+  banners                Json     @default("[]")
+  socialMedia            Json     @default("{}")
+  maintenanceMode        Boolean  @default(false)
+  updatedAt              DateTime @updatedAt
 
   @@map("site_settings")
 }

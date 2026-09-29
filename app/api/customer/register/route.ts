@@ -1,72 +1,163 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 import { prisma } from "@/lib/prisma";
-import { SignJWT } from "jose";
+import {
+  createEmailChallenge,
+  hashPin,
+  normalizeEmail,
+  normalizePhone,
+  phoneLookupCandidates,
+  pinAuthErrorResponse,
+  validatePin,
+} from "@/lib/customer-pin-auth";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "your-secret-key-change-this"
-);
-
-export async function POST(req: NextRequest) {
+export async function POST(
+  req: NextRequest
+) {
   try {
-    const { firstName, lastName, email, phone, address, city } = await req.json();
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      address,
+      city,
+      pin,
+      confirmPin,
+    } = await req.json();
 
-    if (!firstName || !phone) {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !phone ||
+      !pin
+    ) {
       return NextResponse.json(
-        { error: "Nom et téléphone requis" },
+        {
+          error:
+            "Prénom, nom, téléphone, email et PIN requis",
+        },
         { status: 400 }
       );
     }
 
-    // Vérifier si le customer existe déjà
-    const existingCustomer = await prisma.customer.findFirst({
-      where: { phone },
-    });
-
-    if (existingCustomer) {
+    if (
+      confirmPin !== undefined &&
+      pin !== confirmPin
+    ) {
       return NextResponse.json(
-        { error: "Un compte existe déjà avec ce numéro" },
+        {
+          error:
+            "Les deux PIN ne correspondent pas",
+        },
+        { status: 400 }
+      );
+    }
+
+    const normalizedPhone =
+      normalizePhone(phone);
+
+    const normalizedEmail =
+      normalizeEmail(email);
+
+    validatePin(pin);
+
+    const existing =
+      await prisma.customer.findFirst({
+        where: {
+          OR: [
+            {
+              phone: {
+                in: phoneLookupCandidates(
+                  phone
+                ),
+              },
+            },
+            {
+              email: {
+                equals:
+                  normalizedEmail,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+      });
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          error:
+            "Un compte existe déjà avec ce téléphone ou cet email",
+        },
         { status: 409 }
       );
     }
 
-    // Créer le customer
-    const customer = await prisma.customer.create({
-      data: {
-        firstName,
-        lastName: lastName || "",
-        email: email || null,
-        phone,
-        address: address || "",
-        city: city || "Ouagadougou",
-      },
-    });
+    const pinHash =
+      await hashPin(pin);
 
-    // Créer un JWT
-    const token = await new SignJWT({
-      id: customer.id,
-      phone: customer.phone,
-      type: "customer",
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("30d")
-      .sign(JWT_SECRET);
+    const challenge =
+      await createEmailChallenge({
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        purpose: "register",
+        payload: {
+          firstName:
+            String(firstName).trim(),
+          lastName:
+            String(lastName).trim(),
+          email: normalizedEmail,
+          phone: normalizedPhone,
+          address: address
+            ? String(address).trim()
+            : "",
+          city: city
+            ? String(city).trim()
+            : "Ouagadougou",
+          pinHash,
+        },
+      });
 
     return NextResponse.json({
-      user: {
-        id: customer.id,
-        name: `${customer.firstName} ${customer.lastName}`,
-        email: customer.email,
-        phone: customer.phone,
-        address: customer.address,
-        city: customer.city,
-      },
-      token,
-    }, { status: 201 });
+      message:
+        "Un code de vérification a été envoyé à votre adresse email.",
+      challengeId:
+        challenge.challengeId,
+      email: challenge.maskedEmail,
+      expiresIn: challenge.expiresIn,
+      ...(challenge.devCode
+        ? {
+            devCode:
+              challenge.devCode,
+          }
+        : {}),
+    });
   } catch (error) {
-    console.error("Customer register error:", error);
+    const response =
+      pinAuthErrorResponse(error);
+
+    console.error(
+      "Customer registration request error:",
+      error
+    );
+
     return NextResponse.json(
-      { error: "Erreur lors de la création du compte" },
-      { status: 500 }
+      {
+        error: response.error,
+        ...("retryAfter" in response
+          ? {
+              retryAfter:
+                response.retryAfter,
+            }
+          : {}),
+      },
+      {
+        status: response.status,
+      }
     );
   }
 }

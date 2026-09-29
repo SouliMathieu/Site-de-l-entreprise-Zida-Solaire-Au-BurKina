@@ -1,60 +1,180 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 import { prisma } from "@/lib/prisma";
-import { SignJWT } from "jose";
+import {
+  customerPublicData,
+  phoneLookupCandidates,
+  PIN_SECURITY,
+  pinAuthErrorResponse,
+  signCustomerToken,
+  validatePin,
+  verifyPin,
+} from "@/lib/customer-pin-auth";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "your-secret-key-change-this"
-);
-
-export async function POST(req: NextRequest) {
+export async function POST(
+  req: NextRequest
+) {
   try {
-    const { phone } = await req.json();
+    const { phone, pin } =
+      await req.json();
 
-    if (!phone) {
+    if (!phone || !pin) {
       return NextResponse.json(
-        { error: "Numéro de téléphone requis" },
+        {
+          error:
+            "Téléphone et PIN requis",
+        },
         { status: 400 }
       );
     }
 
-    // Chercher le customer par téléphone
-    const customer = await prisma.customer.findFirst({
-      where: { phone },
-    });
+    const validPin = validatePin(pin);
 
+    const customer =
+      await prisma.customer.findFirst({
+        where: {
+          phone: {
+            in: phoneLookupCandidates(
+              phone
+            ),
+          },
+        },
+      });
+
+    // Réponse volontairement générique.
     if (!customer) {
       return NextResponse.json(
-        { error: "Aucun compte trouvé avec ce numéro" },
-        { status: 404 }
+        {
+          error:
+            "Numéro ou PIN incorrect",
+        },
+        { status: 401 }
       );
     }
 
-    // Créer un JWT
-    const token = await new SignJWT({
-      id: customer.id,
-      phone: customer.phone,
-      type: "customer",
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("30d")
-      .sign(JWT_SECRET);
+    if (!customer.pinHash) {
+      return NextResponse.json(
+        {
+          error:
+            "Aucun PIN n'est encore activé pour ce compte",
+          code: "PIN_NOT_SET",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (
+      customer.pinLockedUntil &&
+      customer.pinLockedUntil >
+        new Date()
+    ) {
+      const seconds = Math.ceil(
+        (customer.pinLockedUntil.getTime() -
+          Date.now()) /
+          1000
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Trop de tentatives. Réessayez plus tard.",
+          retryAfter: seconds,
+        },
+        { status: 429 }
+      );
+    }
+
+    const valid =
+      await verifyPin(
+        validPin,
+        customer.pinHash
+      );
+
+    if (!valid) {
+      const attempts =
+        customer.pinFailedAttempts + 1;
+
+      const shouldLock =
+        attempts >=
+        PIN_SECURITY.maxAttempts;
+
+      await prisma.customer.update({
+        where: {
+          id: customer.id,
+        },
+        data: {
+          pinFailedAttempts: attempts,
+          pinLockedUntil: shouldLock
+            ? new Date(
+                Date.now() +
+                  PIN_SECURITY.lockMinutes *
+                    60 *
+                    1000
+              )
+            : null,
+        },
+      });
+
+      if (shouldLock) {
+        return NextResponse.json(
+          {
+            error:
+              "Trop de tentatives. Réessayez dans 15 minutes.",
+            retryAfter:
+              PIN_SECURITY.lockMinutes *
+              60,
+          },
+          { status: 429 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          error:
+            "Numéro ou PIN incorrect",
+        },
+        { status: 401 }
+      );
+    }
+
+    if (
+      customer.pinFailedAttempts !== 0 ||
+      customer.pinLockedUntil
+    ) {
+      await prisma.customer.update({
+        where: {
+          id: customer.id,
+        },
+        data: {
+          pinFailedAttempts: 0,
+          pinLockedUntil: null,
+        },
+      });
+    }
+
+    const token =
+      await signCustomerToken(
+        customer
+      );
 
     return NextResponse.json({
-      user: {
-        id: customer.id,
-        name: `${customer.firstName} ${customer.lastName}`,
-        email: customer.email,
-        phone: customer.phone,
-        address: customer.address,
-        city: customer.city,
-      },
+      user: customerPublicData(customer),
       token,
     });
   } catch (error) {
-    console.error("Customer login error:", error);
+    const response =
+      pinAuthErrorResponse(error);
+
+    console.error(
+      "Customer PIN login error:",
+      error
+    );
+
     return NextResponse.json(
-      { error: "Erreur de connexion" },
-      { status: 500 }
+      { error: response.error },
+      { status: response.status }
     );
   }
 }
