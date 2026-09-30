@@ -48,9 +48,56 @@ model Customer {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  orders Order[]
+  orders                 Order[]
+  notificationPreference CustomerNotificationPreference?
+  notificationReads       CustomerNotificationRead[]
+  pushTokens              CustomerPushToken[]
 
   @@map("customers")
+}
+
+model CustomerNotificationPreference {
+  customerId          String   @id
+  orderUpdates        Boolean  @default(true)
+  installationUpdates Boolean  @default(true)
+  savUpdates          Boolean  @default(true)
+  promotions          Boolean  @default(false)
+  solarTips           Boolean  @default(true)
+  pushEnabled         Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("customer_notification_preferences")
+}
+
+model CustomerNotificationRead {
+  id             String   @id @default(cuid())
+  customerId     String
+  notificationId String
+  readAt         DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, notificationId])
+  @@index([customerId, readAt])
+  @@map("customer_notification_reads")
+}
+
+model CustomerPushToken {
+  id         String   @id @default(cuid())
+  customerId String
+  token      String   @unique
+  platform   String
+  deviceId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@map("customer_push_tokens")
 }
 
 model CustomerEmailChallenge {
