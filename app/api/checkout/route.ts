@@ -9,6 +9,7 @@ import {
   findCustomerByPhone,
   normalizePhone,
 } from "@/lib/customer-pin-auth";
+import { getAuthenticatedCustomer } from "@/lib/customer-api-auth";
 import {
   OrderPricingError,
   priceOrderItems,
@@ -59,12 +60,20 @@ export async function POST(
     const normalizedPhone =
       normalizePhone(customer.phone);
 
-    const existingCustomer =
-      await findCustomerByPhone(
-        normalizedPhone
+    const authenticatedCustomer =
+      await getAuthenticatedCustomer(
+        request
       );
 
+    const existingCustomer =
+      authenticatedCustomer
+        ? null
+        : await findCustomerByPhone(
+            normalizedPhone
+          );
+
     const customerRecord =
+      authenticatedCustomer ??
       existingCustomer ??
       (await prisma.customer.create({
         data: {
