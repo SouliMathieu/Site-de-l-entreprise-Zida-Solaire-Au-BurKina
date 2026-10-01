@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { SignJWT } from "jose";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
+import { getJwtSecret } from "@/lib/jwt-secret";
 
 const PIN_MAX_ATTEMPTS = 5;
 const PIN_LOCK_MINUTES = 15;
@@ -22,13 +23,7 @@ const FORBIDDEN_PINS = new Set([
 ]);
 
 function getSecret() {
-  const secret = process.env.NEXTAUTH_SECRET;
-
-  if (!secret) {
-    throw new Error("NEXTAUTH_SECRET_NOT_CONFIGURED");
-  }
-
-  return secret;
+  return getJwtSecret();
 }
 
 export function normalizePhone(value: string) {

@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { SignJWT } from "jose";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "your-secret-key-change-this"
-);
+import { getJwtSecret } from "@/lib/jwt-secret";
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,7 +43,11 @@ export async function POST(req: NextRequest) {
     })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("7d")
-      .sign(JWT_SECRET);
+      .sign(
+        new TextEncoder().encode(
+          getJwtSecret()
+        )
+      );
 
     // Créer la réponse avec le cookie
     const response = NextResponse.json({

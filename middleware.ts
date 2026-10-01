@@ -1,40 +1,88 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { getJwtSecret } from "@/lib/jwt-secret";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "your-secret-key-change-this"
-);
+const BACKOFFICE_ROLES = new Set([
+  "ADMIN",
+  "MANAGER",
+  "TECHNICIAN",
+]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Protéger les routes /admin
-  if (pathname.startsWith("/admin")) {
-    const token = request.cookies.get("auth-token")?.value;
+  const isAdminPage =
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
 
-    console.log("🔍 Middleware check:");
-    console.log("   Pathname:", pathname);
-    console.log("   Token existe:", !!token);
+  const isAdminApi =
+    pathname === "/api/admin" ||
+    pathname.startsWith("/api/admin/");
 
-    if (!token) {
-      console.log("   ❌ PAS DE TOKEN - Redirection /auth/signin");
-      return NextResponse.redirect(new URL("/auth/signin", request.url));
-    }
-
-    try {
-      const verified = await jwtVerify(token, JWT_SECRET);
-      console.log("   ✅ TOKEN VALIDE");
-      return NextResponse.next();
-    } catch (error) {
-      console.log("   ❌ TOKEN INVALIDE -", error);
-      return NextResponse.redirect(new URL("/auth/signin", request.url));
-    }
+  if (!isAdminPage && !isAdminApi) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  const unauthorized = () => {
+    if (isAdminApi) {
+      return NextResponse.json(
+        { error: "Non autorisé" },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.redirect(
+      new URL("/auth/signin", request.url)
+    );
+  };
+
+  const forbidden = () => {
+    if (isAdminApi) {
+      return NextResponse.json(
+        { error: "Accès interdit" },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.redirect(
+      new URL("/auth/signin", request.url)
+    );
+  };
+
+  const token =
+    request.cookies.get("auth-token")?.value;
+
+  if (!token) {
+    return unauthorized();
+  }
+
+  try {
+    const secret = new TextEncoder().encode(
+      getJwtSecret()
+    );
+
+    const { payload } = await jwtVerify(
+      token,
+      secret
+    );
+
+    if (
+      typeof payload.role !== "string" ||
+      !BACKOFFICE_ROLES.has(payload.role)
+    ) {
+      return forbidden();
+    }
+
+    return NextResponse.next();
+  } catch {
+    return unauthorized();
+  }
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+  ],
 };

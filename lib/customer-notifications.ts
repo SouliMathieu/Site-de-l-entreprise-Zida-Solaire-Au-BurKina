@@ -64,9 +64,31 @@ export async function buildCustomerNotifications(
 ): Promise<CustomerActivityNotification[]> {
   const phones = phoneLookupCandidates(customer.phone);
 
+  const preferences =
+    await prisma.customerNotificationPreference.findUnique({
+      where: {
+        customerId: customer.id,
+      },
+      select: {
+        orderUpdates: true,
+        installationUpdates: true,
+        savUpdates: true,
+      },
+    });
+
+  const showOrders =
+    preferences?.orderUpdates ?? true;
+
+  const showInstallations =
+    preferences?.installationUpdates ?? true;
+
+  const showRepairs =
+    preferences?.savUpdates ?? true;
+
   const [orders, installations, repairs] = await Promise.all([
-    prisma.order.findMany({
-      where: { customerId: customer.id },
+    showOrders
+      ? prisma.order.findMany({
+          where: { customerId: customer.id },
       select: {
         id: true,
         orderNumber: true,
@@ -74,10 +96,12 @@ export async function buildCustomerNotifications(
         updatedAt: true,
       },
       orderBy: { updatedAt: "desc" },
-      take: 30,
-    }),
+          take: 30,
+        })
+      : Promise.resolve([]),
 
-    prisma.installationRequest.findMany({
+    showInstallations
+      ? prisma.installationRequest.findMany({
       where: {
         customerPhone: {
           in: phones,
@@ -90,10 +114,12 @@ export async function buildCustomerNotifications(
         updatedAt: true,
       },
       orderBy: { updatedAt: "desc" },
-      take: 30,
-    }),
+          take: 30,
+        })
+      : Promise.resolve([]),
 
-    prisma.repairRequest.findMany({
+    showRepairs
+      ? prisma.repairRequest.findMany({
       where: {
         phone: {
           in: phones,
@@ -105,8 +131,9 @@ export async function buildCustomerNotifications(
         updatedAt: true,
       },
       orderBy: { updatedAt: "desc" },
-      take: 30,
-    }),
+          take: 30,
+        })
+      : Promise.resolve([]),
   ]);
 
   const notifications: CustomerActivityNotification[] = [

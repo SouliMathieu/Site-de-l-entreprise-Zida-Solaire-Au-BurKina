@@ -1,5 +1,6 @@
 import { jwtVerify } from "jose";
 import { prisma } from "@/lib/prisma";
+import { getJwtSecret } from "@/lib/jwt-secret";
 
 export async function getAuthenticatedCustomer(
   request: Request
@@ -15,13 +16,9 @@ export async function getAuthenticatedCustomer(
   }
 
   const secret =
-    process.env.NEXTAUTH_SECRET;
-
-  if (!secret) {
-    throw new Error(
-      "NEXTAUTH_SECRET_NOT_CONFIGURED"
+    new TextEncoder().encode(
+      getJwtSecret()
     );
-  }
 
   try {
     const token =
@@ -30,7 +27,7 @@ export async function getAuthenticatedCustomer(
     const { payload } =
       await jwtVerify(
         token,
-        new TextEncoder().encode(secret)
+        secret
       );
 
     if (

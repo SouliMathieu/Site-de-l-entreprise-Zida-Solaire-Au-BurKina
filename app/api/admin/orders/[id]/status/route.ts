@@ -53,6 +53,11 @@ export async function PATCH(
       where: { id },
       data: {
         status: body.status,
+        ...(body.status === "DELIVERED"
+          ? {
+              deliveredAt: new Date(),
+            }
+          : {}),
       },
     });
 
