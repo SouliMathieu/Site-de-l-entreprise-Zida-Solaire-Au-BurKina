@@ -117,58 +117,21 @@ export async function POST(
       );
     }
 
-    // Si l'adresse email appartient à une autre fiche client inactive,
-    // on évite de fusionner silencieusement deux historiques distincts.
-    if (
-      emailCustomer &&
+    // Pour les anciennes fiches créées lors d'achats sans compte, on choisit
+    // la fiche liée au numéro comme fiche principale. Si l'email correspond à
+    // une autre fiche inactive, elle sera fusionnée seulement APRÈS validation
+    // du code envoyé à cette adresse email.
+    const existingCustomerId =
+      phoneCustomer?.id ??
+      emailCustomer?.id;
+
+    const duplicateCustomerId =
       phoneCustomer &&
-      emailCustomer.id !== phoneCustomer.id
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Cette adresse email est déjà associée à une autre fiche client",
-        },
-        { status: 409 }
-      );
-    }
-
-    let existingCustomerId:
-      | string
-      | undefined;
-
-    if (phoneCustomer) {
-      // Une commande passée sans compte peut avoir créé une fiche client
-      // uniquement à partir du numéro de téléphone. Cette fiche est
-      // récupérable même si l'utilisateur souhaite maintenant utiliser une
-      // autre adresse email. La nouvelle adresse devra être confirmée par le
-      // code à 6 chiffres avant que le compte ne soit activé.
-      existingCustomerId =
-        phoneCustomer.id;
-    } else if (emailCustomer) {
-      // Cas plus rare : une fiche inactive existe seulement avec cette
-      // adresse email. On ne la récupère que si elle porte déjà le même
-      // numéro normalisé, afin d'éviter toute fusion inattendue.
-      const samePhone =
-        phoneCandidates.includes(
-          emailCustomer.phone
-        ) ||
-        emailCustomer.phone ===
-          normalizedPhone;
-
-      if (!samePhone) {
-        return NextResponse.json(
-          {
-            error:
-              "Cette adresse email est déjà associée à une autre fiche client",
-          },
-          { status: 409 }
-        );
-      }
-
-      existingCustomerId =
-        emailCustomer.id;
-    }
+      emailCustomer &&
+      phoneCustomer.id !==
+        emailCustomer.id
+        ? emailCustomer.id
+        : undefined;
 
     const pinHash =
       await hashPin(pin);
@@ -194,6 +157,9 @@ export async function POST(
           pinHash,
           ...(existingCustomerId
             ? { existingCustomerId }
+            : {}),
+          ...(duplicateCustomerId
+            ? { duplicateCustomerId }
             : {}),
         },
       });
