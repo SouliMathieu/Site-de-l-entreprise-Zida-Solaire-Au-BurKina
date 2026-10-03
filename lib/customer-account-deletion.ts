@@ -13,6 +13,8 @@ export async function deleteCustomerAccount(customerId: string) {
       throw new Error("CUSTOMER_NOT_FOUND");
     }
 
+    // Les commandes doivent rester disponibles pour les obligations
+    // commerciales/comptables, mais sans rester liées à l'identité supprimée.
     const archiveCustomer = await tx.customer.upsert({
       where: { id: ARCHIVE_CUSTOMER_ID },
       update: {},
@@ -94,6 +96,21 @@ export async function deleteCustomerAccount(customerId: string) {
       where: contactWhere,
     });
 
+    // Nettoyage explicite des données d'authentification et de notification.
+    // Ne pas dépendre uniquement des contraintes ON DELETE CASCADE de la DB,
+    // qui peuvent différer entre un ancien schéma de production et Prisma.
+    await tx.customerPushToken.deleteMany({
+      where: { customerId: customer.id },
+    });
+
+    await tx.customerNotificationRead.deleteMany({
+      where: { customerId: customer.id },
+    });
+
+    await tx.customerNotificationPreference.deleteMany({
+      where: { customerId: customer.id },
+    });
+
     if (customer.email) {
       await tx.customerEmailChallenge.deleteMany({
         where: {
@@ -113,8 +130,6 @@ export async function deleteCustomerAccount(customerId: string) {
       where: { phone: customer.phone },
     });
 
-    // Preferences, notification reads and push tokens are removed by
-    // their onDelete: Cascade relations when the customer is deleted.
     await tx.customer.delete({
       where: { id: customer.id },
     });
