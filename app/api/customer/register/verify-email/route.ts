@@ -18,6 +18,7 @@ type RegistrationPayload = {
   address?: string;
   city?: string;
   pinHash: string;
+  existingCustomerId?: string;
 };
 
 export async function POST(
@@ -88,6 +89,58 @@ export async function POST(
             throw new Error(
               "EMAIL_CODE_INVALID"
             );
+          }
+
+          if (payload.existingCustomerId) {
+            const existing =
+              await tx.customer.findUnique({
+                where: {
+                  id: payload.existingCustomerId,
+                },
+              });
+
+            if (!existing) {
+              throw new Error(
+                "ACCOUNT_ALREADY_EXISTS"
+              );
+            }
+
+            if (
+              existing.pinHash ||
+              existing.emailVerifiedAt
+            ) {
+              throw new Error(
+                "ACCOUNT_ALREADY_EXISTS"
+              );
+            }
+
+            return tx.customer.update({
+              where: {
+                id: existing.id,
+              },
+              data: {
+                firstName:
+                  payload.firstName,
+                lastName:
+                  payload.lastName,
+                email:
+                  payload.email,
+                phone:
+                  payload.phone,
+                address:
+                  payload.address ||
+                  "",
+                city:
+                  payload.city ||
+                  "Ouagadougou",
+                pinHash:
+                  payload.pinHash,
+                emailVerifiedAt:
+                  new Date(),
+                pinFailedAttempts: 0,
+                pinLockedUntil: null,
+              },
+            });
           }
 
           const existing =
