@@ -85,16 +85,56 @@ export async function POST(
             },
           ],
         },
+        orderBy: {
+          updatedAt: "desc",
+        },
       });
 
+    let existingCustomerId:
+      | string
+      | undefined;
+
     if (existing) {
-      return NextResponse.json(
-        {
-          error:
-            "Un compte existe déjà avec ce téléphone ou cet email",
-        },
-        { status: 409 }
-      );
+      const hasActiveAccount =
+        Boolean(existing.pinHash) ||
+        Boolean(existing.emailVerifiedAt);
+
+      const samePhone =
+        phoneLookupCandidates(phone).includes(
+          existing.phone
+        ) ||
+        existing.phone === normalizedPhone;
+
+      const sameEmail =
+        Boolean(existing.email) &&
+        existing.email!.trim().toLowerCase() ===
+          normalizedEmail;
+
+      if (hasActiveAccount) {
+        return NextResponse.json(
+          {
+            error:
+              "Un compte existe déjà avec ce téléphone ou cet email",
+          },
+          { status: 409 }
+        );
+      }
+
+      // Une fiche client peut avoir été créée lors d'une commande passée
+      // sans compte. On ne la réactive que si le téléphone ET l'email
+      // correspondent, puis l'email sera vérifié avant activation.
+      if (!samePhone || !sameEmail) {
+        return NextResponse.json(
+          {
+            error:
+              "Un compte ou une fiche client utilise déjà ce téléphone ou cet email",
+          },
+          { status: 409 }
+        );
+      }
+
+      existingCustomerId =
+        existing.id;
     }
 
     const pinHash =
@@ -119,6 +159,9 @@ export async function POST(
             ? String(city).trim()
             : "Ouagadougou",
           pinHash,
+          ...(existingCustomerId
+            ? { existingCustomerId }
+            : {}),
         },
       });
 
