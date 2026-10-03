@@ -84,9 +84,6 @@ export async function findCustomerByPhone(value: string) {
     return null;
   }
 
-  // Compatibilité avec d'anciens doublons :
-  // privilégier la fiche qui possède déjà un PIN,
-  // puis celle dont l'email est vérifié.
   return (
     customers.find(
       (customer) => Boolean(customer.pinHash)
@@ -221,6 +218,26 @@ function hashEmailCode(
     .digest("hex");
 }
 
+function providerErrorCode(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return "UNKNOWN";
+  }
+
+  const rawName =
+    "name" in error
+      ? String((error as { name?: unknown }).name || "")
+      : "";
+
+  const normalized = rawName
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+
+  return normalized || "UNKNOWN";
+}
+
 async function sendEmailCode(
   email: string,
   code: string,
@@ -311,7 +328,9 @@ async function sendEmailCode(
       result.error
     );
 
-    throw new Error("EMAIL_DELIVERY_FAILED");
+    throw new Error(
+      `EMAIL_DELIVERY_FAILED:${providerErrorCode(result.error)}`
+    );
   }
 
   return {
@@ -577,12 +596,15 @@ export function pinAuthErrorResponse(
   }
 
   if (
-    message === "EMAIL_DELIVERY_FAILED"
+    message.startsWith("EMAIL_DELIVERY_FAILED:")
   ) {
+    const code =
+      message.split(":")[1] || "UNKNOWN";
+
     return {
       status: 502,
       error:
-        "Impossible d'envoyer l'email pour le moment",
+        `Impossible d'envoyer l'email pour le moment (code RESEND-${code}).`,
     };
   }
 
