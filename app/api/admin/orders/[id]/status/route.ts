@@ -7,6 +7,7 @@ const ALLOWED_STATUSES = [
   "PENDING",
   "CONFIRMED",
   "PREPARING",
+  "READY_FOR_PICKUP",
   "SHIPPED",
   "DELIVERED",
   "CANCELLED",
@@ -36,6 +37,7 @@ export async function PATCH(
         orderNumber: true,
         customerId: true,
         status: true,
+        fulfillmentMethod: true,
       },
     });
 
@@ -44,6 +46,13 @@ export async function PATCH(
         { error: "Commande introuvable." },
         { status: 404 }
       );
+    }
+
+    if (body.status === "READY_FOR_PICKUP" && existingOrder.fulfillmentMethod !== "PICKUP") {
+      return NextResponse.json({ error: "Ce statut est réservé aux commandes en retrait." }, { status: 400 });
+    }
+    if (body.status === "SHIPPED" && existingOrder.fulfillmentMethod === "PICKUP") {
+      return NextResponse.json({ error: "Une commande en retrait ne peut pas être expédiée." }, { status: 400 });
     }
 
     const statusChanged =
@@ -66,8 +75,9 @@ export async function PATCH(
         PENDING: `Votre commande ${order.orderNumber} a été reçue et est en attente de traitement.`,
         CONFIRMED: `Votre commande ${order.orderNumber} a été confirmée.`,
         PREPARING: `Votre commande ${order.orderNumber} est en préparation.`,
+        READY_FOR_PICKUP: `Votre commande ${order.orderNumber} est prête à récupérer ! ZIDA SOLAIRE vous invite à convenir des modalités du retrait et à payer sur place.`,
         SHIPPED: `Votre commande ${order.orderNumber} a été expédiée.`,
-        DELIVERED: `Votre commande ${order.orderNumber} a été livrée.`,
+        DELIVERED: order.fulfillmentMethod === "PICKUP" ? `Votre commande ${order.orderNumber} a été remise au point de retrait.` : `Votre commande ${order.orderNumber} a été livrée.`,
         CANCELLED: `Votre commande ${order.orderNumber} a été annulée.`,
       };
 
