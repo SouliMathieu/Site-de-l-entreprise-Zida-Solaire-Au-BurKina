@@ -18,6 +18,7 @@ function orderMessage(orderNumber: string, status: string) {
     PENDING: `Votre commande ${orderNumber} a été reçue et est en attente de traitement.`,
     CONFIRMED: `Votre commande ${orderNumber} a été confirmée.`,
     PREPARING: `Votre commande ${orderNumber} est en préparation.`,
+    READY_FOR_PICKUP: `Votre commande ${orderNumber} est prête à récupérer. Attendez la confirmation des modalités de retrait par ZIDA SOLAIRE. Paiement sur place.`,
     SHIPPED: `Votre commande ${orderNumber} a été expédiée.`,
     DELIVERED: `Votre commande ${orderNumber} a été livrée.`,
     CANCELLED: `Votre commande ${orderNumber} a été annulée.`,
