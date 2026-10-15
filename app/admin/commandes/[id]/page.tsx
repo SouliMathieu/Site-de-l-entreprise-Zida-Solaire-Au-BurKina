@@ -88,9 +88,11 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <p className="text-slate-700">
           Ville : {order.deliveryCity || customer?.city || "-"}
         </p>
-        <p className="text-slate-700">
-          Adresse : {order.deliveryAddress || customer?.address || "-"}
-        </p>
+        <p className="text-slate-700">Mode de réception : {order.fulfillmentMethod === "PICKUP" ? "Retrait sur place" : "Livraison à domicile"}</p>
+        <p className="text-slate-700">Paiement : {order.paymentMethod === "CASH_ON_PICKUP" ? "À régler au retrait" : "À régler à la livraison"}</p>
+        <p className="text-slate-700">Paiement effectué : {order.paymentStatus === "PAID" ? "Oui" : "Non"}</p>
+        {order.fulfillmentMethod === "DELIVERY" && <p className="text-slate-700">Adresse : {order.deliveryAddress}</p>}
+        {order.fulfillmentMethod === "PICKUP" && <p className="text-amber-700">Prévenir le client lorsque sa commande est prête, avant son déplacement.</p>}
         {order.customerNotes && (
           <p className="text-xs text-slate-500 mt-2">
             Notes client : {order.customerNotes}
@@ -132,7 +134,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             </span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-slate-500">Livraison</span>
+            <span className="text-slate-500">{order.fulfillmentMethod === "PICKUP" ? "Retrait" : "Livraison"}</span>
             <span className="font-medium text-slate-800">
               {Number(order.deliveryFee).toLocaleString("fr-FR")} FCFA
             </span>

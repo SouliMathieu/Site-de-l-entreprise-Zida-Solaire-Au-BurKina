@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   OrderStatus,
+  FulfillmentMethod,
   PaymentMethod,
   PaymentStatus,
 } from "@prisma/client";
@@ -37,6 +38,17 @@ export async function POST(
 
     const customer = body?.customer;
     const items = body?.items;
+    const fulfillmentMethod = body?.fulfillmentMethod === "PICKUP" ? FulfillmentMethod.PICKUP : FulfillmentMethod.DELIVERY;
+
+    if (body?.fulfillmentMethod != null && !["DELIVERY", "PICKUP"].includes(body.fulfillmentMethod)) {
+      return NextResponse.json({ error: "Mode de réception invalide." }, { status: 400 });
+    }
+    if (customer?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(customer.email).trim())) {
+      return NextResponse.json({ error: "L'adresse email renseignée est invalide." }, { status: 400 });
+    }
+    if (fulfillmentMethod === FulfillmentMethod.DELIVERY && !String(customer?.address || "").trim()) {
+      return NextResponse.json({ error: "L'adresse de livraison est obligatoire." }, { status: 400 });
+    }
 
     if (
       !customer ||
@@ -103,8 +115,11 @@ export async function POST(
             customerRecord.id,
           status:
             OrderStatus.PENDING,
+          fulfillmentMethod,
           paymentMethod:
-            PaymentMethod.CASH_ON_DELIVERY,
+            fulfillmentMethod === FulfillmentMethod.PICKUP
+              ? PaymentMethod.CASH_ON_PICKUP
+              : PaymentMethod.CASH_ON_DELIVERY,
           paymentStatus:
             PaymentStatus.PENDING,
 
@@ -114,7 +129,9 @@ export async function POST(
           total: priced.total,
 
           deliveryAddress:
-            customer.address,
+            fulfillmentMethod === FulfillmentMethod.PICKUP
+              ? "Retrait chez ZIDA SOLAIRE - adresse à confirmer"
+              : customer.address,
           deliveryCity:
             customer.city ||
             "Ouagadougou",
@@ -159,6 +176,9 @@ export async function POST(
           orderNumber:
             order.orderNumber,
           status: order.status,
+          fulfillmentMethod: order.fulfillmentMethod,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
 
           subtotal:
             Number(order.subtotal),
