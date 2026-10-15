@@ -147,6 +147,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
                       Ville
                     </th>
                     <th className="px-6 py-3 text-left font-semibold text-gray-600">
+                      Réception
+                    </th>
+                    <th className="px-6 py-3 text-left font-semibold text-gray-600">
                       Total
                     </th>
                     <th className="px-6 py-3 text-left font-semibold text-gray-600">
@@ -188,6 +191,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
                         </td>
                         <td className="px-6 py-3 text-gray-700">
                           {customer?.city || "-"}
+                        </td>
+                        <td className="px-6 py-3 text-gray-700">
+                          {order.fulfillmentMethod === "PICKUP" ? "Retrait sur place" : "Livraison"}
                         </td>
                         <td className="px-6 py-3 font-semibold text-gray-900">
                           {Number(order.total).toLocaleString("fr-FR")}{" "}
