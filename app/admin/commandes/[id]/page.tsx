@@ -66,7 +66,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           </p>
         </div>
 
-        <OrderStatusClient orderId={order.id} initialStatus={order.status} />
+        <OrderStatusClient orderId={order.id} initialStatus={order.status} fulfillmentMethod={order.fulfillmentMethod} />
       </div>
 
       {/* Infos client */}

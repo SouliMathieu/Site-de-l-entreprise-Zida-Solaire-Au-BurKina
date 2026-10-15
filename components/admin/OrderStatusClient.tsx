@@ -7,6 +7,7 @@ const STATUSES = [
   "PENDING",
   "CONFIRMED",
   "PREPARING",
+  "READY_FOR_PICKUP",
   "SHIPPED",
   "DELIVERED",
   "CANCELLED",
@@ -17,9 +18,10 @@ type Status = (typeof STATUSES)[number];
 interface Props {
   orderId: string;
   initialStatus: string;
+  fulfillmentMethod: "DELIVERY" | "PICKUP";
 }
 
-export function OrderStatusClient({ orderId, initialStatus }: Props) {
+export function OrderStatusClient({ orderId, initialStatus, fulfillmentMethod }: Props) {
   const [status, setStatus] = useState<Status>(
     (initialStatus as Status) || "PENDING"
   );
@@ -67,9 +69,9 @@ export function OrderStatusClient({ orderId, initialStatus }: Props) {
         onChange={handleChange}
         className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
       >
-        {STATUSES.map((s) => (
+        {STATUSES.filter((s) => fulfillmentMethod === "PICKUP" ? s !== "SHIPPED" : s !== "READY_FOR_PICKUP").map((s) => (
           <option key={s} value={s}>
-            {s}
+            {s === "READY_FOR_PICKUP" ? "Prête à récupérer" : s === "DELIVERED" && fulfillmentMethod === "PICKUP" ? "Remise au client" : ({ PENDING: "En attente", CONFIRMED: "Confirmée", PREPARING: "En préparation", SHIPPED: "Expédiée", DELIVERED: "Livrée", CANCELLED: "Annulée" } as Record<string,string>)[s]}
           </option>
         ))}
       </select>
