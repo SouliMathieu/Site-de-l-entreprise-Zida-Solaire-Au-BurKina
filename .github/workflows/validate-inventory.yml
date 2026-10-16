@@ -1,0 +1,51 @@
+name: Validate Stock Reservation
+
+on:
+  push:
+    branches:
+      - fix/reservation-stock-atomique
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  inventory-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ztesting
+          POSTGRES_PASSWORD: ztesting
+          POSTGRES_DB: ztesting
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ztesting -d ztesting"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ztesting:ztesting@localhost:5432/ztesting?schema=public
+      DIRECT_URL: postgresql://ztesting:ztesting@localhost:5432/ztesting?schema=public
+      NEXTAUTH_SECRET: test-only-not-a-production-secret-abcdefghijklmnopqrstuvwxyz
+      INVENTORY_TEST_DATABASE: isolated-postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Prisma schema validation
+        run: npx prisma validate
+      - name: Apply migrations on an isolated test database
+        run: npx prisma migrate deploy
+      - name: Generate Prisma types
+        run: npx prisma generate
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Transactional inventory integration tests
+        run: node --test tests/inventory.integration.cjs
