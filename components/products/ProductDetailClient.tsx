@@ -1,6 +1,7 @@
-import { readableSpecifications } from "@/lib/product-specifications";
 // components/products/ProductDetailClient.tsx
 "use client";
+
+import { readableSpecifications } from "@/lib/product-specifications";
 
 import { useState } from "react";
 import Image from "next/image";
