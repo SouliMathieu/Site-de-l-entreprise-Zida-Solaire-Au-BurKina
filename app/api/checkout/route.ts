@@ -113,6 +113,7 @@ export async function POST(
           orderNumber,
           customerId:
             customerRecord.id,
+          guestCheckout: !authenticatedCustomer,
           status:
             OrderStatus.PENDING,
           fulfillmentMethod,

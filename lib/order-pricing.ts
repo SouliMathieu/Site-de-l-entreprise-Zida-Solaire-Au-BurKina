@@ -10,7 +10,7 @@ export class OrderPricingError extends Error {
   constructor(
     public code:
       | "INVALID_ITEMS"
-      | "PRODUCT_NOT_AVAILABLE",
+      | "PRODUCT_NOT_AVAILABLE" | "INSUFFICIENT_STOCK",
     message: string
   ) {
     super(message);
@@ -77,6 +77,7 @@ export async function priceOrderItems(
         id: true,
         name: true,
         price: true,
+        stock: true,
       },
     });
 
@@ -88,6 +89,16 @@ export async function priceOrderItems(
       "PRODUCT_NOT_AVAILABLE",
       "Un ou plusieurs produits ne sont plus disponibles."
     );
+  }
+
+  const quantities = new Map<string, number>();
+  for (const item of normalizedItems) {
+    quantities.set(item.productId, (quantities.get(item.productId) || 0) + item.quantity);
+  }
+  for (const product of products) {
+    if ((quantities.get(product.id) || 0) > product.stock) {
+      throw new OrderPricingError("INSUFFICIENT_STOCK", `Stock insuffisant pour ${product.name}.`);
+    }
   }
 
   const productMap = new Map(
@@ -107,6 +118,10 @@ export async function priceOrderItems(
           "PRODUCT_NOT_AVAILABLE",
           "Produit indisponible."
         );
+      }
+
+      if (item.quantity > product.stock) {
+        throw new OrderPricingError('INSUFFICIENT_STOCK', 'Stock insuffisant pour ce produit.');
       }
 
       const price =

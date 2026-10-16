@@ -89,7 +89,7 @@ export async function buildCustomerNotifications(
   const [orders, installations, repairs] = await Promise.all([
     showOrders
       ? prisma.order.findMany({
-          where: { customerId: customer.id },
+          where: { customerId: customer.id, guestCheckout: false },
       select: {
         id: true,
         orderNumber: true,

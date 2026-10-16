@@ -24,6 +24,7 @@ export async function GET(
       await prisma.order.findMany({
         where: {
           customerId: customer.id,
+          guestCheckout: false,
         },
         include: {
           items: true,
