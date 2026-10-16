@@ -1,6 +1,7 @@
 // app/api/admin/orders/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { deleteOrderWithInventory, OrderInventoryTransitionError } from "@/lib/order-inventory";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -52,21 +53,16 @@ export async function DELETE(request: Request, { params }: Params) {
       );
     }
 
-    // Supprimer d’abord les items pour éviter les erreurs de contrainte
-    await prisma.orderItem.deleteMany({
-      where: { orderId: id },
-    });
-
-    // Puis supprimer la commande
-    await prisma.order.delete({
-      where: { id },
-    });
+    await deleteOrderWithInventory(id);
 
     return NextResponse.json({
       success: true,
       message: "Commande supprimée définitivement",
     });
   } catch (error) {
+    if (error instanceof OrderInventoryTransitionError) {
+      return NextResponse.json({ error: "Commande déjà modifiée. Réessayez après actualisation." }, { status: 409 });
+    }
     console.error("Error deleting order:", error);
     return NextResponse.json(
       { error: "Erreur lors de la suppression de la commande" },
