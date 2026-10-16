@@ -10,7 +10,7 @@ export class OrderPricingError extends Error {
   constructor(
     public code:
       | "INVALID_ITEMS"
-      | "PRODUCT_NOT_AVAILABLE",
+      | "PRODUCT_NOT_AVAILABLE" | "INSUFFICIENT_STOCK",
     message: string
   ) {
     super(message);
