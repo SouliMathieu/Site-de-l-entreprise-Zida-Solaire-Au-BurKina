@@ -110,6 +110,7 @@ export async function POST(
         data: {
           orderNumber,
           customerId: customer.id,
+          guestCheckout: true,
           status: "PENDING",
           paymentMethod:
             "CASH_ON_DELIVERY",
