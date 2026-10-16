@@ -114,6 +114,8 @@ export async function POST(
               );
             }
 
+            await tx.order.updateMany({ where: { customerId: existing.id }, data: { guestCheckout: true } });
+
             return tx.customer.update({
               where: {
                 id: existing.id,
