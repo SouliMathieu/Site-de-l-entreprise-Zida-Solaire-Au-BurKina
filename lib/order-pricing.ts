@@ -91,6 +91,16 @@ export async function priceOrderItems(
     );
   }
 
+  const quantities = new Map<string, number>();
+  for (const item of normalizedItems) {
+    quantities.set(item.productId, (quantities.get(item.productId) || 0) + item.quantity);
+  }
+  for (const product of products) {
+    if ((quantities.get(product.id) || 0) > product.stock) {
+      throw new OrderPricingError("INSUFFICIENT_STOCK", `Stock insuffisant pour ${product.name}.`);
+    }
+  }
+
   const productMap = new Map(
     products.map((product) => [
       product.id,
