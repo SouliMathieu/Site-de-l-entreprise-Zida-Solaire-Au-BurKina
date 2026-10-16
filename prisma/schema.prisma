@@ -200,6 +200,7 @@ model Order {
   orderNumber     String        @unique
   customerId      String
   guestCheckout   Boolean       @default(false)
+  stockReservedAt DateTime?
   status          OrderStatus   @default(PENDING)
   fulfillmentMethod FulfillmentMethod @default(DELIVERY)
   paymentMethod   PaymentMethod @default(CASH_ON_DELIVERY)

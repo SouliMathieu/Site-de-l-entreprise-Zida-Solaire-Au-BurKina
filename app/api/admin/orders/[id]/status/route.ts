@@ -1,6 +1,7 @@
 // app/api/admin/orders/[id]/status/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { OrderInventoryTransitionError, transitionOrderWithInventory } from "@/lib/order-inventory";
 import { sendCustomerOrderPush } from "@/lib/customer-push";
 
 const ALLOWED_STATUSES = [
@@ -59,17 +60,7 @@ export async function PATCH(
     const statusChanged =
       existingOrder.status !== body.status;
 
-    const order = await prisma.order.update({
-      where: { id },
-      data: {
-        status: body.status,
-        ...(body.status === "DELIVERED"
-          ? {
-              deliveredAt: new Date(),
-            }
-          : {}),
-      },
-    });
+    const { order } = await transitionOrderWithInventory(id, body.status);
 
     if (statusChanged && !existingOrder.guestCheckout) {
       const messages: Record<string, string> = {
@@ -107,6 +98,9 @@ export async function PATCH(
 
     return NextResponse.json(order, { status: 200 });
   } catch (error) {
+    if (error instanceof OrderInventoryTransitionError) {
+      return NextResponse.json({ error: error.reason === "NOT_FOUND" ? "Commande introuvable." : "La commande a été modifiée ou cette transition est interdite. Actualisez la page." }, { status: error.reason === "NOT_FOUND" ? 404 : 409 });
+    }
     console.error("Error updating order status:", error);
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour du statut." },

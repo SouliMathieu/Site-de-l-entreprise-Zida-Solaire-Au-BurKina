@@ -6,6 +6,7 @@ import {
   PaymentStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { createOrderWithReservedStock } from "@/lib/order-inventory";
 import {
   findCustomerByPhone,
   normalizePhone,
@@ -108,8 +109,8 @@ export async function POST(
       generateOrderNumber();
 
     const order =
-      await prisma.order.create({
-        data: {
+      await createOrderWithReservedStock(
+        {
           orderNumber,
           customerId:
             customerRecord.id,
@@ -162,10 +163,8 @@ export async function POST(
               ),
           },
         },
-        include: {
-          items: true,
-        },
-      });
+        items.map((item: any) => ({ productId: item.id, quantity: item.quantity }))
+      );
 
     return NextResponse.json(
       {
