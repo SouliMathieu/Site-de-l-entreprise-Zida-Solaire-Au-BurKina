@@ -199,6 +199,7 @@ model Order {
   id              String        @id @default(uuid())
   orderNumber     String        @unique
   customerId      String
+  guestCheckout   Boolean       @default(false)
   status          OrderStatus   @default(PENDING)
   fulfillmentMethod FulfillmentMethod @default(DELIVERY)
   paymentMethod   PaymentMethod @default(CASH_ON_DELIVERY)
