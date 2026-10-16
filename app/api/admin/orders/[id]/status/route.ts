@@ -38,6 +38,7 @@ export async function PATCH(
         customerId: true,
         status: true,
         fulfillmentMethod: true,
+        guestCheckout: true,
       },
     });
 
@@ -70,7 +71,7 @@ export async function PATCH(
       },
     });
 
-    if (statusChanged) {
+    if (statusChanged && !existingOrder.guestCheckout) {
       const messages: Record<string, string> = {
         PENDING: `Votre commande ${order.orderNumber} a été reçue et est en attente de traitement.`,
         CONFIRMED: `Votre commande ${order.orderNumber} a été confirmée.`,
