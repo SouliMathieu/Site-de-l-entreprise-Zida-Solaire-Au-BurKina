@@ -77,6 +77,7 @@ export async function priceOrderItems(
         id: true,
         name: true,
         price: true,
+        stock: true,
       },
     });
 
@@ -107,6 +108,10 @@ export async function priceOrderItems(
           "PRODUCT_NOT_AVAILABLE",
           "Produit indisponible."
         );
+      }
+
+      if (item.quantity > product.stock) {
+        throw new OrderPricingError('INSUFFICIENT_STOCK', 'Stock insuffisant pour ce produit.');
       }
 
       const price =
