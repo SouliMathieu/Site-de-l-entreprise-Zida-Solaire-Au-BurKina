@@ -76,7 +76,9 @@ export async function POST(
               in: phoneCandidates,
             },
           },
-          where: undefined,
+          orderBy: {
+            updatedAt: "desc",
+          },
         }),
         prisma.customer.findFirst({
           where: {
