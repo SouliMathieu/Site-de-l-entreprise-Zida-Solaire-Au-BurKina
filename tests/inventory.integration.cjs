@@ -77,7 +77,7 @@ test("cancellation twice and deletion never double credit", async () => {
   assert.equal(await stock(p), 2);
 });
 test("deleting reserved pending order restores stock", async () => {
-  const p = await product(2), o = await reserve([{productId:(await product(1)).id,quantity:1}]);
+  const p = await product(2), o = await reserve([{productId:p.id,quantity:1}]);
   await deleteOrderWithInventory(o.id);
   assert.equal(await stock(p), 2);
 });
