@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Category } from "@prisma/client";
 import { ImageUploader } from "./ImageUploader";
+import { SOLAR_FIELDS, solarCategoryType } from "@/lib/product-specifications";
 
 interface Props {
   categories: Category[];
@@ -49,6 +50,8 @@ function buildSolarSpecifications(formData: FormData): SolarSpecifications {
 export function NewProductFormClient({ categories }: Props) {
   const router = useRouter();
   const [status, setStatus] = useState<Status>("idle");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const categoryType = solarCategoryType(categories.find((item) => item.id === selectedCategoryId)?.name);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
 
@@ -152,6 +155,7 @@ export function NewProductFormClient({ categories }: Props) {
             </label>
             <select
               name="categoryId"
+              onChange={(event) => setSelectedCategoryId(event.target.value)}
               required
               className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
             >
@@ -278,86 +282,23 @@ export function NewProductFormClient({ categories }: Props) {
       </div>
 
 
-      {/* Caractéristiques techniques solaires */}
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h2 className="mb-2 text-lg font-semibold text-slate-900">
-          Caractéristiques techniques solaires
-        </h2>
-
-        <p className="mb-4 text-sm text-slate-500">
-          Ces informations permettent au simulateur solaire de sélectionner
-          automatiquement les produits adaptés.
-        </p>
-
-        <div className="grid gap-4 md:grid-cols-2">
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Puissance panneau (W)
-            </label>
-            <input
-              type="number"
-              name="panelPowerW"
-              step="1"
-              placeholder="Ex. 595"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
-            />
+      {categoryType !== "other" && (
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-2 text-lg font-semibold text-slate-900">Caractéristiques solaires</h2>
+          <p className="mb-4 text-sm text-slate-500">Renseignez uniquement les données présentes sur la fiche fabricant. Ces valeurs servent au simulateur solaire.</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {SOLAR_FIELDS.filter((field) => (field.types as readonly string[]).includes(categoryType)).map((field) => (
+              <div key={field.key}>
+                <label htmlFor={field.key} className="block text-sm font-medium text-slate-700">{field.label}</label>
+                <input id={field.key} type="number" min="0" step="any" name={field.key}
+                  
+                  placeholder={field.placeholder}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2" />
+              </div>
+            ))}
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Puissance photovoltaïque du kit (kWc)
-            </label>
-            <input
-              type="number"
-              name="solarPowerKw"
-              step="0.01"
-              placeholder="Ex. 5.95"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Capacité batterie (kWh)
-            </label>
-            <input
-              type="number"
-              name="batteryCapacityKwh"
-              step="0.01"
-              placeholder="Ex. 15"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Puissance nominale onduleur (kW)
-            </label>
-            <input
-              type="number"
-              name="inverterPowerKw"
-              step="0.01"
-              placeholder="Ex. 5"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Puissance de surcharge onduleur (kW)
-            </label>
-            <input
-              type="number"
-              name="inverterSurgePowerKw"
-              step="0.01"
-              placeholder="Ex. 10"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-4 py-2"
-            />
-          </div>
-
         </div>
-      </div>
+      )}
 
       {/* Images */}
       <div className="rounded-lg bg-white p-6 shadow">

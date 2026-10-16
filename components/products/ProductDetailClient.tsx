@@ -1,3 +1,4 @@
+import { readableSpecifications } from "@/lib/product-specifications";
 // components/products/ProductDetailClient.tsx
 "use client";
 
@@ -229,18 +230,18 @@ export function ProductDetailClient({ product }: Props) {
           <p className="whitespace-pre-wrap text-slate-600">{product.description}</p>
         </div>
 
-        {product.specifications && (
+        {readableSpecifications(product.specifications).length > 0 && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-2xl font-bold text-slate-900">
               Spécifications techniques
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
-              {Object.entries(product.specifications).map(([key, value]) => (
+              {readableSpecifications(product.specifications).map(({ key, label, value }) => (
                 <div
                   key={key}
                   className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
                 >
-                  <span className="font-semibold text-slate-700">{key} :</span>
+                  <span className="font-semibold text-slate-700">{label} :</span>
                   <span className="text-slate-900">{value}</span>
                 </div>
               ))}
