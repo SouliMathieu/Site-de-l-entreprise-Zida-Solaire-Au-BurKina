@@ -70,6 +70,10 @@ export async function POST(
       );
     }
 
+    if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email).trim())) {
+      return NextResponse.json({ error: 'Adresse e-mail invalide.' }, { status: 400 });
+    }
+
     const priced =
       await priceOrderItems(
         body.items.map((item) => ({
