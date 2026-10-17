@@ -55,6 +55,9 @@ export async function PATCH(req: NextRequest) {
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
     const { firstName, lastName, email, phone, address, city } = await req.json();
+    if (email !== undefined && email !== null && String(email).trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+      return NextResponse.json({ error: 'Adresse e-mail invalide.' }, { status: 400 });
+    }
     if (phone !== undefined) {
       return NextResponse.json({ error: 'Le changement du numéro de connexion nécessite une vérification par ZIDA SOLAIRE.' }, { status: 403 });
     }
