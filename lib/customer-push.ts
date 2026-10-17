@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
-const EXPO_TOKEN_PATTERN = /^ExponentPushToken\[[^\]]+\]$/;
+const EXPO_TOKEN_PATTERN = /^Expo(?:nent)?PushToken\[[^\]]+\]$/;
 
 type CustomerOrderPushInput = {
   customerId: string;
