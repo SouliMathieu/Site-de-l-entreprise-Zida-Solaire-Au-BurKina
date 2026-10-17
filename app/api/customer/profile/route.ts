@@ -55,8 +55,29 @@ export async function PATCH(req: NextRequest) {
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
     const { firstName, lastName, email, phone, address, city } = await req.json();
+    if (email !== undefined && email !== null && String(email).trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+      return NextResponse.json({ error: 'Adresse e-mail invalide.' }, { status: 400 });
+    }
     if (phone !== undefined) {
       return NextResponse.json({ error: 'Le changement du numéro de connexion nécessite une vérification par ZIDA SOLAIRE.' }, { status: 403 });
+    }
+
+    // Empêcher le changement d'une adresse e-mail sans vérification de propriété.
+    const currentCustomer = await prisma.customer.findUnique({
+      where: { id: payload.id as string },
+      select: { email: true },
+    });
+    if (!currentCustomer) {
+      return NextResponse.json({ error: "Client non trouvé" }, { status: 404 });
+    }
+    if (
+      email !== undefined &&
+      String(email ?? "").trim().toLowerCase() !==
+        String(currentCustomer.email ?? "").trim().toLowerCase()
+    ) {
+      return NextResponse.json({
+        error: "Pour modifier l'adresse e-mail du compte, contactez ZIDA SOLAIRE afin de vérifier la nouvelle adresse.",
+      }, { status: 403 });
     }
 
     let normalizedPhone:
@@ -102,7 +123,6 @@ export async function PATCH(req: NextRequest) {
       data: {
         ...(firstName && { firstName }),
         ...(lastName && { lastName }),
-        ...(email !== undefined && { email: email || null }),
         ...(normalizedPhone && { phone: normalizedPhone }),
         ...(address !== undefined && { address }),
         ...(city && { city }),

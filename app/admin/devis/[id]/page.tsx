@@ -13,6 +13,13 @@ export const metadata = {
   description: "Détail d'une demande de devis client ZIDA SOLAIRE.",
 };
 
+const INSTALLATION_LABELS: Record<string, string> = {
+  SOLAR: "Solaire",
+  ELECTRICAL: "Électrique",
+  PLUMBING: "Plomberie",
+  OTHER: "Autre",
+};
+
 export default async function AdminDevisDetailPage({ params }: PageProps) {
   const { id } = await params;
 
@@ -76,7 +83,7 @@ export default async function AdminDevisDetailPage({ params }: PageProps) {
                 Demande #{request.requestNumber}
               </h1>
               <p className="text-sm text-gray-500">
-                Créée le {createdAt} — Type : {request.installationType}
+                Créée le {createdAt} — Type : {INSTALLATION_LABELS[request.installationType] ?? request.installationType}
               </p>
             </div>
           </div>
@@ -133,7 +140,7 @@ export default async function AdminDevisDetailPage({ params }: PageProps) {
               <p className="text-sm text-gray-700">
                 Type d'installation :{" "}
                 <span className="font-medium">
-                  {request.installationType}
+                  {INSTALLATION_LABELS[request.installationType] ?? request.installationType}
                 </span>
               </p>
               <p className="text-sm text-gray-700">

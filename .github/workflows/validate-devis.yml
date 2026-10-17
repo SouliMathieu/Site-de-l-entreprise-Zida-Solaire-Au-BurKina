@@ -1,0 +1,70 @@
+name: Validate Devis API
+on:
+  push:
+    branches: [fix/devis-api-validation-email]
+  pull_request:
+    branches: [master]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://unused:unused@localhost:5432/unused
+      DIRECT_URL: postgresql://unused:unused@localhost:5432/unused
+      NEXTAUTH_SECRET: test-not-a-production-secret-abcdefghijklmnopqrstuvwxyz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma validate
+      - run: npx prisma generate
+      - run: npx tsc --noEmit
+
+  forms-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ztesting
+          POSTGRES_PASSWORD: ztesting
+          POSTGRES_DB: ztesting
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ztesting -d ztesting"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ztesting:ztesting@localhost:5432/ztesting?schema=public
+      DIRECT_URL: postgresql://ztesting:ztesting@localhost:5432/ztesting?schema=public
+      NEXTAUTH_SECRET: test-only-not-a-production-secret-abcdefghijklmnopqrstuvwxyz
+      FORMS_TEST_DATABASE: isolated-postgres
+      # Valeur fictive pour permettre le build Next.js ; aucun e-mail réel n'est envoyé.
+      RESEND_API_KEY: re_ci_only_not_a_real_key_12345678901234567890
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npx prisma generate
+      - run: npm run build
+      - name: Start the Next.js server and wait for readiness
+        run: |
+          npm run start > /tmp/zida-next.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:3000/api/devis -o /dev/null || curl -sS http://127.0.0.1:3000/api/devis -o /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/zida-next.log
+          exit 1
+      - name: Test API routes and persistence with disposable PostgreSQL
+        run: node --test tests/forms.integration.cjs
