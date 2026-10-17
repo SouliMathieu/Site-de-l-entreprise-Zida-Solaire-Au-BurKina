@@ -14,6 +14,10 @@ export async function POST(req: Request) {
       );
     }
 
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+      return NextResponse.json({ error: 'Adresse e-mail invalide.' }, { status: 400 });
+    }
+
     // Enregistrer le message de contact
     const contact = await prisma.contactMessage.create({
       data: {
