@@ -7,6 +7,14 @@ const TYPES: Record<string, "SOLAR" | "ELECTRICAL" | "PLUMBING" | "OTHER"> = {
   pumping: "SOLAR", other: "OTHER",
 };
 
+const PROJECT_LABELS: Record<string, string> = {
+  residential: "Installation résidentielle",
+  commercial: "Installation commerciale",
+  industrial: "Installation industrielle",
+  pumping: "Système de pompage solaire",
+  other: "Autre projet",
+};
+
 export async function POST(request: Request) {
   try {
     const data = await request.json();
@@ -14,7 +22,8 @@ export async function POST(request: Request) {
     const phone = String(data?.phone || "").trim();
     const address = String(data?.address || "").trim();
     const email = String(data?.email || "").trim();
-    const type = TYPES[String(data?.systemType || "")];
+    const systemType = String(data?.systemType || "");
+    const type = TYPES[systemType];
     if (!name || !phone || !address || !type) {
       return NextResponse.json({ error: "Nom, téléphone, adresse et type de projet requis." }, { status: 400 });
     }
@@ -22,8 +31,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Adresse e-mail invalide." }, { status: 400 });
     }
     const description = [
-      "Projet : " + String(data.systemType),
-      data.estimatedBudget ? "Budget : " + String(data.estimatedBudget) : null,
+      "Type de projet : " + PROJECT_LABELS[systemType],
+      data.estimatedBudget ? "Budget estimé : " + String(data.estimatedBudget) : null,
       data.message ? "Précisions : " + String(data.message) : null,
     ].filter(Boolean).join("\n");
     const now = new Date();
