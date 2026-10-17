@@ -5,16 +5,20 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, phone, subject, message } = body;
+    const name = String(body?.name ?? "").trim();
+    const email = String(body?.email ?? "").trim();
+    const phone = String(body?.phone ?? "").trim();
+    const subject = String(body?.subject ?? "").trim() || "Demande de contact";
+    const message = String(body?.message ?? "").trim();
 
-    if (!name || !email || !phone || !subject || !message) {
+    if (!name || !phone || !message) {
       return NextResponse.json(
-        { error: "Tous les champs sont requis" },
+        { error: "Le nom, le téléphone et le message sont obligatoires." },
         { status: 400 }
       );
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Adresse e-mail invalide.' }, { status: 400 });
     }
 
