@@ -1,0 +1,23 @@
+name: Validate Devis API
+on:
+  push:
+    branches: [fix/devis-api-validation-email]
+  pull_request:
+    branches: [master]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://unused:unused@localhost:5432/unused
+      DIRECT_URL: postgresql://unused:unused@localhost:5432/unused
+      NEXTAUTH_SECRET: test-not-a-production-secret-abcdefghijklmnopqrstuvwxyz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma validate
+      - run: npx prisma generate
+      - run: npx tsc --noEmit
