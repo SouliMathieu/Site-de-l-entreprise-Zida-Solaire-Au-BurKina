@@ -43,6 +43,8 @@ jobs:
       DIRECT_URL: postgresql://ztesting:ztesting@localhost:5432/ztesting?schema=public
       NEXTAUTH_SECRET: test-only-not-a-production-secret-abcdefghijklmnopqrstuvwxyz
       FORMS_TEST_DATABASE: isolated-postgres
+      # Valeur fictive pour permettre le build Next.js ; aucun e-mail réel n'est envoyé.
+      RESEND_API_KEY: re_ci_only_not_a_real_key_12345678901234567890
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
